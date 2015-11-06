@@ -242,7 +242,7 @@ Logit "IP is $OSDAdapter0IPAddressList so we prep for Static IP"
     add-Content $unattendFile '  <WillReboot>Never</WillReboot>'
     add-Content $unattendFile '</RunSynchronousCommand>'
     #add-Content $unattendFile '<RunSynchronousCommand wcm:action="add">'
-    #add-Content $unattendFile '  <Description>Testinstall of Windowsfeature 2</Description>'
+    #add-Content $unattendFile '  <Description>Testinstall of Windowsfeature 2</Description>'dfdf
     #add-Content $unattendFile '  <Order>2</Order>'
     #add-Content $unattendFile "  <Path>Powershell -NoLogo -Command &quot;Install-ADDSForest -DomainName $ADDomainName -CreateDNSDelegation -DomainMode $ADDomainMode -ForestMode $ADForestMode -SafeModeAdministratorPassword $(ConvertTo-SecureString -AsPlainText $ADSafeModeAdministratorPassword -Force) -DatabasePath &quot;$ADDatabasePath&quot; -SysvolPath &quot;$ADSysvolPath&quot; -LogPath &quot;$ADLogPath&quot;&quot;</Path>"
     #add-Content $unattendFile '  <WillReboot>Always</WillReboot>'
