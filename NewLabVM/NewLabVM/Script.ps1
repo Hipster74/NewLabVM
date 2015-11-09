@@ -436,8 +436,8 @@ Get-VM -Name $VMName | Get-VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -
 $Section = "Main"
 $SizeinGB = 60
 # Get settingsfile from github
-Invoke-WebRequest -Uri 'https://raw.github.com/Hipster74/AzureAutomatedLab/master/CMLabSetup/CMLabSetup/ad_srv_settings.xml' -OutFile "$env:SystemRoot\Temp\ad_srv_settings.xml"
-[xml]$AdSrvSettings = Get-Content .\Settings.xml
+Invoke-WebRequest -Uri 'https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/ad_srv_settings.xml' -OutFile "$env:SystemRoot\Temp\ad_srv_settings.xml"
+[xml]$AdSrvSettings = Get-Content "$env:SystemRoot\Temp\ad_srv_settings.xml"
 $JoinWorkgroup = $DomainOrWorkGroupName
 $OSDAdapter0IPAddressList = $IPAddress
 #Set values for VM creation
