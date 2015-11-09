@@ -1,0 +1,38 @@
+<Telecomputing>
+  <MachineDefaults>
+    <AdminPassword>P@ssw0rd</AdminPassword>
+    <OrgName>Telecomputing</OrgName>
+    <FullName>Telecomputing</FullName>
+    <TimeZoneName>W. Europe Standard Time</TimeZoneName>
+    <InputLocale>sv-SE</InputLocale>
+    <SystemLocale>en-US</SystemLocale>
+    <UILanguage>en-US</UILanguage>
+    <UserLocale>sv-SE</UserLocale>
+    <OSDAdapter0Gateways>192.168.1.1</OSDAdapter0Gateways>
+    <OSDAdapter0DNSServerList>192.168.1.200</OSDAdapter0DNSServerList>
+    <OSDAdapter0DNSServerList>192.168.1.201</OSDAdapter0DNSServerList>
+    <OSDAdapter0SubnetMaskPrefix>24</OSDAdapter0SubnetMaskPrefix>
+    <ProductKey>D2N9P-3P6X9-2R39C-7RTCD-MDVJX</ProductKey>
+    <VMSwitchName>UpLinkSwitch</VMSwitchName>
+   </MachineDefaults>
+  <DomainCreateDefaults>
+    <DomainName>tclab.local</DomainName>
+    <DomainMode>Win2012R2</DomainMode>
+    <ForestMode>Win2012R2</ForestMode>
+    <SafeModeAdministratorPassword>P@ssw0rd</SafeModeAdministratorPassword>
+    <DatabasePath>c:\NTDS</DatabasePath>
+    <SysvolPath>c:\SYSVOL</SysvolPath>
+    <LogPath>c:\Logs</LogPath>
+  </DomainCreateDefaults>
+  <DomainDefaults>
+    <DNSDomain>tclab.local</DNSDomain>
+    <DomainNetBios>TCLAB</DomainNetBios>
+    <DomainAdmin>Administrator</DomainAdmin>
+    <DomainAdminPassword>P@ssw0rd</DomainAdminPassword>
+    <DomainAdminDomain>TCLAB</DomainAdminDomain>
+    <MachienObjectOU>CN=Computers,DC=tclab,DC=local</MachienObjectOU>
+  </DomainDefaults>
+  <WorkgroupDefaults>
+   <WorkgroupName>WORKGROUP</WorkgroupName>
+  </WorkgroupDefaults>
+</Telecomputing>
