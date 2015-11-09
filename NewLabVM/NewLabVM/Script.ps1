@@ -573,6 +573,14 @@ If ($VLANID -notlike ""){SetVLANID $VMName $VLANID}
 #Start VM
 Start-VM $VMName
 
+#Wait for VM to get ready
+while((Get-VM -Name $VMName).HeartBeat -ne  'OkApplicationsHealthy')
+{
+
+	Start-Sleep -Seconds 1
+
+}
+
 #Notify
 Logit "Done"
 
