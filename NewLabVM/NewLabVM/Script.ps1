@@ -435,47 +435,49 @@ Get-VM -Name $VMName | Get-VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -
 # Main
 $Section = "Main"
 $SizeinGB = 60
-[xml]$Settings = Get-Content .\Settings.xml
+# Get settingsfile from github
+Invoke-WebRequest -Uri 'https://raw.github.com/Hipster74/AzureAutomatedLab/master/CMLabSetup/CMLabSetup/ad_srv_settings.xml' -OutFile "$env:SystemRoot\Temp\ad_srv_settings.xml"
+[xml]$AdSrvSettings = Get-Content .\Settings.xml
 $JoinWorkgroup = $DomainOrWorkGroupName
 $OSDAdapter0IPAddressList = $IPAddress
 #Set values for VM creation
 $VHDXFile = "$VMLocation\$VMName\Virtual Hard Disks\$VMName-OSDisk.vhdx"
 
 #Setting MachineDefaults
-$AdminPassword = $Settings.Telecomputing.MachineDefaults.AdminPassword
-$OrgName = $Settings.Telecomputing.MachineDefaults.OrgName
-$Fullname = $Settings.Telecomputing.MachineDefaults.FullName
-$TimeZoneName = $Settings.Telecomputing.MachineDefaults.TimeZoneName
-$InputLocale = $Settings.Telecomputing.MachineDefaults.InputLocale
-$SystemLocale = $Settings.Telecomputing.MachineDefaults.SystemLocale
-$UILanguage = $Settings.Telecomputing.MachineDefaults.UILanguage
-$UserLocale = $Settings.Telecomputing.MachineDefaults.UserLocale
-$OSDAdapter0Gateways = $Settings.Telecomputing.MachineDefaults.OSDAdapter0Gateways
-$OSDAdapter0DNS1 = $Settings.Telecomputing.MachineDefaults.OSDAdapter0DNSServerList[0]
-$OSDAdapter0DNS2 = $Settings.Telecomputing.MachineDefaults.OSDAdapter0DNSServerList[1]
-$OSDAdapter0SubnetMaskPrefix = $Settings.Telecomputing.MachineDefaults.OSDAdapter0SubnetMaskPrefix
-$ProductKey = $Settings.Telecomputing.MachineDefaults.ProductKey
-$VMSwitchName = $Settings.Telecomputing.MachineDefaults.VMSwitchName
+$AdminPassword = $AdSrvSettings.Telecomputing.MachineDefaults.AdminPassword
+$OrgName = $AdSrvSettings.Telecomputing.MachineDefaults.OrgName
+$Fullname = $AdSrvSettings.Telecomputing.MachineDefaults.FullName
+$TimeZoneName = $AdSrvSettings.Telecomputing.MachineDefaults.TimeZoneName
+$InputLocale = $AdSrvSettings.Telecomputing.MachineDefaults.InputLocale
+$SystemLocale = $AdSrvSettings.Telecomputing.MachineDefaults.SystemLocale
+$UILanguage = $AdSrvSettings.Telecomputing.MachineDefaults.UILanguage
+$UserLocale = $AdSrvSettings.Telecomputing.MachineDefaults.UserLocale
+$OSDAdapter0Gateways = $AdSrvSettings.Telecomputing.MachineDefaults.OSDAdapter0Gateways
+$OSDAdapter0DNS1 = $AdSrvSettings.Telecomputing.MachineDefaults.OSDAdapter0DNSServerList[0]
+$OSDAdapter0DNS2 = $AdSrvSettings.Telecomputing.MachineDefaults.OSDAdapter0DNSServerList[1]
+$OSDAdapter0SubnetMaskPrefix = $AdSrvSettings.Telecomputing.MachineDefaults.OSDAdapter0SubnetMaskPrefix
+$ProductKey = $AdSrvSettings.Telecomputing.MachineDefaults.ProductKey
+$VMSwitchName = $AdSrvSettings.Telecomputing.MachineDefaults.VMSwitchName
 
 #Setting DomainCreateDefaults
-$ADDomainName = $Settings.Telecomputing.DomainCreateDefaults.DomainName
-$ADDomainMode = $Settings.Telecomputing.DomainCreateDefaults.DomainMode
-$ADForestMode = $Settings.Telecomputing.DomainCreateDefaults.ForestMode
-$ADSafeModeAdministratorPassword = $Settings.Telecomputing.DomainCreateDefaults.SafeModeAdministratorPassword
-$ADDatabasePath = $Settings.Telecomputing.DomainCreateDefaults.DatabasePath
-$ADSysvolPath = $Settings.Telecomputing.DomainCreateDefaults.SysvolPath
-$ADLogPath = $Settings.Telecomputing.DomainCreateDefaults.LogPath
+$ADDomainName = $AdSrvSettings.Telecomputing.DomainCreateDefaults.DomainName
+$ADDomainMode = $AdSrvSettings.Telecomputing.DomainCreateDefaults.DomainMode
+$ADForestMode = $AdSrvSettings.Telecomputing.DomainCreateDefaults.ForestMode
+$ADSafeModeAdministratorPassword = $AdSrvSettings.Telecomputing.DomainCreateDefaults.SafeModeAdministratorPassword
+$ADDatabasePath = $AdSrvSettings.Telecomputing.DomainCreateDefaults.DatabasePath
+$ADSysvolPath = $AdSrvSettings.Telecomputing.DomainCreateDefaults.SysvolPath
+$ADLogPath = $AdSrvSettings.Telecomputing.DomainCreateDefaults.LogPath
 
 #Setting DomainDefaults
-$DNSDomain = $Settings.Telecomputing.DomainDefaults.DNSDomain
-$DomainNetBios = $Settings.Telecomputing.DomainDefaults.DomainNetBios
-$DomainAdmin = $Settings.Telecomputing.DomainDefaults.DomainAdmin
-$DomainAdminPassword = $Settings.Telecomputing.DomainDefaults.DomainAdminPassword
-$DomainAdminDomain = $Settings.Telecomputing.DomainDefaults.DomainAdminDomain
-$MachienObjectOU = $Settings.Telecomputing.DomainDefaults.MachienObjectOU
+$DNSDomain = $AdSrvSettings.Telecomputing.DomainDefaults.DNSDomain
+$DomainNetBios = $AdSrvSettings.Telecomputing.DomainDefaults.DomainNetBios
+$DomainAdmin = $AdSrvSettings.Telecomputing.DomainDefaults.DomainAdmin
+$DomainAdminPassword = $AdSrvSettings.Telecomputing.DomainDefaults.DomainAdminPassword
+$DomainAdminDomain = $AdSrvSettings.Telecomputing.DomainDefaults.DomainAdminDomain
+$MachienObjectOU = $AdSrvSettings.Telecomputing.DomainDefaults.MachienObjectOU
 
 #Settings WorkgroupDefaults
-$JoinWorkgroup = $Settings.Telecomputing.WorkgroupDefaults.WorkgroupName
+$JoinWorkgroup = $AdSrvSettings.Telecomputing.WorkgroupDefaults.WorkgroupName
 
 Logit "Starting"
 Logit "WIM File is $SourceFile"
