@@ -1,0 +1,3 @@
+#
+# SetupAzureAutomationAssets.ps1
+#
