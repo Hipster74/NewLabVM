@@ -436,6 +436,7 @@ Get-VM -Name $VMName | Get-VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -
 $Section = "Main"
 $SizeinGB = 60
 # Get settingsfile from github
+if (Test-Path "$env:SystemRoot\Temp\ad_srv_settings.xml") {Remove-Item "$env:SystemRoot\Temp\ad_srv_settings.xml"}
 Invoke-WebRequest -Uri 'https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/ad_srv_settings.xml' -OutFile "$env:SystemRoot\Temp\ad_srv_settings.xml"
 [xml]$AdSrvSettings = Get-Content "$env:SystemRoot\Temp\ad_srv_settings.xml"
 $JoinWorkgroup = $DomainOrWorkGroupName
