@@ -35,4 +35,13 @@
   <WorkgroupDefaults>
    <WorkgroupName>WORKGROUP</WorkgroupName>
   </WorkgroupDefaults>
+  <DHCPServerDefaults>
+    <DHCPScopeName>10.96.130.0/24</DHCPScopeName>
+    <DHCPScopeStart>10.96.130.125</DHCPScopeStart>
+    <DHCPScopeEnd>10.96.130.130</DHCPScopeEnd>
+    <DHCPScopeSubnetMask>255.255.255.0</DHCPScopeSubnetMask>
+    <DHCPScopeFQDN>tclab.local</DHCPScopeFQDN>
+    <DHCPScopeDNS>10.96.130.120</DHCPScopeDNS>
+    <DHCPScopeRouter>10.96.130.1</DHCPScopeRouter>
+  </DHCPServerDefaults>
 </Telecomputing>
