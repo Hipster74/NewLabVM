@@ -29,7 +29,10 @@
   <ItemGroup />
   <ItemGroup>
     <Compile Include="ad_srv_settings.xml" />
-    <Compile Include="Script.ps1" />
+    <Compile Include="CMLabSetup-Main.ps1" />
+    <Compile Include="Configure-LabADSrv.ps1" />
+    <Compile Include="NewLabVM.ps1" />
+    <Compile Include="SetupAzureAutomationAssets.ps1" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Target Name="Build" />

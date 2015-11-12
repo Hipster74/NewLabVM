@@ -21,7 +21,7 @@ Param(
 [parameter(mandatory=$False,HelpMessage="Path and name of WIM file.")]
 [ValidateNotNullOrEmpty()]
 
-$Sourcefile,
+[string]$SourceFile,
 [parameter(mandatory=$true,HelpMessage="Name of VM.")]
 [ValidateLength(1,14)]
 $VMName,
@@ -68,7 +68,7 @@ $TextBlock1 = $args[0]
 $TextBlock2 = $args[1]
 $TextBlock3 = $args[2]
 $Stamp = Get-Date -Format o
-Write-Host "[$Stamp] [$Section - $TextBlock1]"
+Write-Output "[$Stamp] [$Section - $TextBlock1]"
 }
 Function CheckVHDXFile($VHDXFile){
 # Check if VHDX exists
@@ -86,18 +86,19 @@ Function CheckWIMFile($SourceFile){
 # Check if WIMFile exists
 Logit "Check if $SourceFile exists"
 If($SourceFile -like ""){
-Logit "No WIM file specified, will create blank disk and set to PXE"
-$SourceFile = "NoFile"
+	Logit "No WIM file specified, will create blank disk and set to PXE"
+	$SourceFile = 'NoFile'
+	Return $true
 }else{
 Logit "Testing $SourceFile"
-$FileExist = Test-Path $SourceFile
-If($FileExist -like 'True'){
+If(Test-Path $SourceFile){
+	Logit "$SourceFile found"
+	Return $True
 }else{
-Logit "Could not find the WIM file, will create blank disk and set to PXE"
-$SourceFile = "NoFile"
+	Logit "Could not find the WIM file, return false"
+	Return $False
 }
 }
-Return $SourceFile
 }
 Function CheckVM($VMName){
 # Check if VM exists
@@ -338,7 +339,7 @@ Logit "Driveletter is now = $VHDXVolume"
 Logit "Applying $SourceFile to $VHDXVolume\"
 sleep 5
 Logit "This will take a while..."
-Try{Expand-WindowsImage -ImagePath $SourceFile -Index 1 -ApplyPath $VHDXVolume\ -Verbose -ErrorAction Stop
+Try{Expand-WindowsImage -ImagePath "$SourceFile" -Index 1 -ApplyPath $VHDXVolume\ -Verbose -ErrorAction Stop
 }Catch{$ErrorMessage = $_.Exception.Message
 Logit "Fail: $ErrorMessage"
 Break
@@ -386,7 +387,7 @@ Logit "Driveletter for the NTFS volume is now = $VHDXVolume3"
 Logit "Applying $SourceFile to $VHDXVolume3\"
 sleep 5
 Logit "This will take a while..."
-Try{Expand-WindowsImage -ImagePath $SourceFile -Index 1 -ApplyPath $VHDXVolume3\ -Verbose -ErrorAction Stop -LogPath "C:\Setup\Scripts\applyimage.log"
+Try{Expand-WindowsImage -ImagePath "$SourceFile" -Index 1 -ApplyPath $VHDXVolume3\ -Verbose -ErrorAction Stop -LogPath "C:\Setup\Scripts\applyimage.log"
 }Catch{$ErrorMessage = $_.Exception.Message
 Logit "Fail: $ErrorMessage"
 Break
@@ -437,7 +438,16 @@ $Section = "Main"
 $SizeinGB = 60
 # Get settingsfile from github
 if (Test-Path "$env:SystemRoot\Temp\ad_srv_settings.xml") {Remove-Item "$env:SystemRoot\Temp\ad_srv_settings.xml"}
-Invoke-WebRequest -Uri 'https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/ad_srv_settings.xml' -OutFile "$env:SystemRoot\Temp\ad_srv_settings.xml"
+try{
+	Invoke-WebRequest -Uri 'https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/ad_srv_settings.xml' -OutFile "$env:SystemRoot\Temp\ad_srv_settings.xml"
+}
+Catch {
+	$ErrorMessage = $_.Exception.Message
+	Logit "Failed to download .xml from github: $ErrorMessage"
+	Write-Error $ErrorMessage
+	Break
+}
+sleep -Seconds 2
 [xml]$AdSrvSettings = Get-Content "$env:SystemRoot\Temp\ad_srv_settings.xml"
 $JoinWorkgroup = $DomainOrWorkGroupName
 $OSDAdapter0IPAddressList = $IPAddress
@@ -498,7 +508,11 @@ CheckVHDXFile $VHDXFile
 
 # Check to see if the file already exist
 $Section = "CheckWIMFile"
-$SourceFile = CheckWIMFile $SourceFile
+$CheckWIMFileResult = CheckWIMFile $SourceFile
+if (!($CheckWIMFileResult)) {
+	Logit "Failed to verify that WIMFile exists!"
+	Break
+}
 Logit "The WIMfile is set to $SourceFile"
 
 # Create unattend.xml
@@ -506,7 +520,7 @@ If ($DifforCreate -like 'Diff'){
 }else{
 If ($SourceFile -like 'NoFile'){Logit "No need for any unattend.xml"}else{
 $Section = "Create Unattend XML"
-Write-Host "CreateUnattendFile $VMName $JoinWorkgroup $ProductKey $OrgName $Fullname $TimeZoneName $InputLocale $SystemLocale $UILanguage $UserLocale $OSDAdapter0DNS1 $OSDAdapter0DNS2 $DNSDomain $OSDAdapter0IPAddressList $OSDAdapter0Gateways $OSDAdapter0SubnetMaskPrefix $AdminPassword $ADDomainName $ADDomainMode $ADForestMode $ADSafeModeAdministratorPassword $ADDatabasePath $ADSysvolPath $ADLogPath"
+Logit "CreateUnattendFile $VMName $JoinWorkgroup $ProductKey $OrgName $Fullname $TimeZoneName $InputLocale $SystemLocale $UILanguage $UserLocale $OSDAdapter0DNS1 $OSDAdapter0DNS2 $DNSDomain $OSDAdapter0IPAddressList $OSDAdapter0Gateways $OSDAdapter0SubnetMaskPrefix $AdminPassword $ADDomainName $ADDomainMode $ADForestMode $ADSafeModeAdministratorPassword $ADDatabasePath $ADSysvolPath $ADLogPath"
 CreateUnattendFile $VMName $JoinWorkgroup $ProductKey $OrgName $Fullname $TimeZoneName $InputLocale $SystemLocale $UILanguage $UserLocale $OSDAdapter0DNS1 $OSDAdapter0DNS2 $DNSDomain $OSDAdapter0IPAddressList $OSDAdapter0Gateways $OSDAdapter0SubnetMaskPrefix $AdminPassword $ADDomainName $ADDomainMode $ADForestMode $ADSafeModeAdministratorPassword $ADDatabasePath $ADSysvolPath $ADLogPath
 }}
 
@@ -571,17 +585,19 @@ Add-VMHardDiskDrive -VM $VM -Path $VMDisk02.Path -ControllerType SCSI
 #Set VLAN
 If ($VLANID -notlike ""){SetVLANID $VMName $VLANID}
 
-#Start VM
-Start-VM $VMName
-
 #Wait for VM to get ready
-while((Get-VM -Name $VMName).HeartBeat -ne  'OkApplicationsHealthy')
-{
+if (Get-VM -Name $VMName){
+	#Start VM
+	Logit "Starting VM $VMName"
+	Start-VM $VMName
 
-	Start-Sleep -Seconds 1
-
+	while((Get-VM -Name $VMName).HeartBeat -ne  'OkApplicationsHealthy')
+	{
+		Logit "Waiting for $VMName to start"
+		Start-Sleep -Seconds 1
+	}
 }
-
+else {Logit "Unable to start VM $VMName because it does not exist?"}
 #Notify
 Logit "Done"
 
