@@ -1,8 +1,6 @@
 Workflow Configure-LabADSrv {
 param(
-    [string] $VMName,
-    [int] $VMPort = 80,
-    [boolean] $VMUseSSL
+    [string] $VMName
 )
 
 $VMCredential = Get-AutomationPSCredential -Name "CMLabCred-SrvLocalAdmin"
@@ -18,6 +16,7 @@ Inlinescript{
     $Section = "$env:COMPUTERNAME"
 	Logit ("Successfully remoted to " + $env:COMPUTERNAME)
 
+	$Section = "Install WindowsFeatures"
 	try {
 		Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools
 	}
@@ -27,14 +26,28 @@ Inlinescript{
 		Write-Error $ErrorMessage
 		Break
 	}
+	try {
+		Install-WindowsFeature -Name DHCP -IncludeManagementTools
+	}
+	Catch {
+		$ErrorMessage = $_.Exception.Message
+		Logit "Failed to install DHCP: $ErrorMessage"
+		Write-Error $ErrorMessage
+		Break
+	}
 	Logit "Importing Powershell ActiveDirectory module"
 	Import-Module ActiveDirectory
-
+	
 	# Get settingsfile from github
-	if (Test-Path "$env:SystemRoot\Temp\ad_srv_settings.xml") {Remove-Item "$env:SystemRoot\Temp\ad_srv_settings.xml"}
+	$Section = "Get XMLFile"
+	if (Test-Path "$env:SystemRoot\Temp\ad_srv_settings.xml") {
+		Logit "Found $env:SystemRoot\Temp\ad_srv_settings.xml , deleting it before downloading latest version"
+		Remove-Item "$env:SystemRoot\Temp\ad_srv_settings.xml"
+	}
 	try{
 		Logit "Attempting to download settings XMLFile from github (https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/ad_srv_settings.xml)"
 		Invoke-WebRequest -Uri 'https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/ad_srv_settings.xml' -OutFile "$env:SystemRoot\Temp\ad_srv_settings.xml"
+		Logit "XMLFile downloaded from github"
 	}
 	Catch {
 		$ErrorMessage = $_.Exception.Message
@@ -82,8 +95,10 @@ Inlinescript{
 	#Settings WorkgroupDefaults
 	$JoinWorkgroup = $AdSrvSettings.Telecomputing.WorkgroupDefaults.WorkgroupName
 
+	# Create securestring password for Install-ADDSForest
 	$ADSafeModeAdministratorPasswordSecure = ConvertTo-SecureString -String $ADSafeModeAdministratorPassword -AsPlainText -Force
 	
+	$Section = "Configure Active Directory"
 	# Configure Active Directory and DNS
 	Logit "Configura AD DS and DNS"
 	Install-ADDSForest `
@@ -94,7 +109,7 @@ Inlinescript{
 	-DomainNetbiosName $DomainNetBios `
 	-ForestMode $ADForestMode `
 	-InstallDns:$true `
-	-SafeModeAdministratorPassword $SecurePassword `
+	-SafeModeAdministratorPassword $ADSafeModeAdministratorPasswordSecure `
 	-LogPath "$ADLogPath" `
 	-NoRebootOnCompletion:$true `
 	-SysvolPath "$ADSysvolPath" `
@@ -103,6 +118,69 @@ Inlinescript{
 } -PSComputerName $VMName -PSCredential $VMCredential
 
 Write-Output "Restarting computer $VMName to complete Active Directory installation"
-Restart-Computer -Wait -PSComputerName $VMName -PSCredential $VMCredential
+Restart-Computer -PSComputerName $VMName -PSCredential $VMCredential -Wait -For PowerShell -Force
 
+Inlinescript {
+
+	Function Logit{
+		$TextBlock1 = $args[0]
+		$TextBlock2 = $args[1]
+		$TextBlock3 = $args[2]
+		$Stamp = Get-Date -Format o
+		Write-Output "[$Stamp] [$Section - $TextBlock1]"
+	}       
+    $Section = "$env:COMPUTERNAME"
+	Logit ("Successfully remoted to " + $env:COMPUTERNAME)
+	
+	$Section = "Get XMLFile"
+	[xml]$AdSrvSettings = Get-Content "$env:SystemRoot\Temp\ad_srv_settings.xml"
+	Logit "Getting settings from XMLFile into variables"
+
+	# Settings DHCPServerDefaults
+	$DHCPScopeName = $AdSrvSettings.Telecomputing.DHCPServerDefaults.DHCPScopeName
+	$DHCPScopeStart = $AdSrvSettings.Telecomputing.DHCPServerDefaults.DHCPScopeStart
+	$DHCPScopeEnd = $AdSrvSettings.Telecomputing.DHCPServerDefaults.DHCPScopeEnd
+	$DHCPScopeSubnetMask = $AdSrvSettings.Telecomputing.DHCPServerDefaults.DHCPScopeSubnetMask
+	$DHCPScopeFQDN = $AdSrvSettings.Telecomputing.DHCPServerDefaults.DHCPScopeFQDN
+	$DHCPScopeDNS = $AdSrvSettings.Telecomputing.DHCPServerDefaults.DHCPScopeDNS
+	$DHCPScopeRouter = $AdSrvSettings.Telecomputing.DHCPServerDefaults.DHCPScopeRouter
+	
+	$Section = "Configure DHCP Server"
+	# Authorize the DHCP Server in Active Directory
+	Logit "Authorize the DHCP Server in Active Directory"
+	Add-DhcpServerInDC -Verbose
+
+	# Add Scope to DHCP Server
+	Logit "Add Scope to DHCP Server"
+	Add-DhcpServerv4Scope `
+	-Name $DHCPScopeName `
+	-StartRange $DHCPScopeStart `
+	-EndRange $DHCPScopeEnd `
+	-SubnetMask $DHCPScopeSubnetMask `
+	-Verbose
+
+	# Set Options on scope
+	Logit "Set Options on scope"
+	$ScopeID = Get-DhcpServerv4Scope | Where-Object -Property Name -Like -Value "$DHCPScopeName"
+	Set-DhcpServerv4OptionValue `
+	-ScopeId $ScopeID.ScopeId `
+	-DnsDomain $DHCPScopeFQDN `
+	-DnsServer $DHCPScopeDNS `
+	-Router $DHCPScopeRouter `
+	-Verbose
+
+	# Add Security Groups
+	Logit "Add Security Groups"
+	Add-DhcpServerSecurityGroup -Verbose
+
+	# Flag DHCP as configured
+	Logit "Flag DHCP as configured in registry"
+	Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\ServerManager\Roles\12 -Name ConfigurationState -Value 2 -Force -Verbose
+
+	# Restart DHCP Server
+	Logit "Restart DHCP Server"
+	Restart-Service "DHCP Server" -Force -Verbose
+
+} -PSComputerName $VMName -PSCredential $VMCredential
+	Write-Output "Done"
 }
