@@ -20,8 +20,12 @@ Author - Johan Arwidmark
 Param(
 [parameter(mandatory=$False,HelpMessage="Path and name of WIM file.")]
 [ValidateNotNullOrEmpty()]
-
 [string]$SourceFile,
+
+[parameter(mandatory=$True,HelpMessage="Name of XML file with serversettings.")]
+[ValidateNotNullOrEmpty()]
+[string]$SrvSettingsXMLFile,
+
 [parameter(mandatory=$true,HelpMessage="Name of VM.")]
 [ValidateLength(1,14)]
 $VMName,
@@ -233,25 +237,19 @@ Logit "IP is $OSDAdapter0IPAddressList so we prep for Static IP"
     add-Content $unattendFile '        </component>'
     
 }
-    ################Test RunSynchronous in Specialise pass, will run as system##################
+    ################RunSynchronous in Specialise pass, will run as system##################
     add-Content $unattendFile '<component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
     add-Content $unattendFile '<RunSynchronous>'
     add-Content $unattendFile '<RunSynchronousCommand wcm:action="add">'
-    add-Content $unattendFile '  <Description>Testinstall of Windowsfeature</Description>'
+    add-Content $unattendFile '  <Description>Enable-PSRemoting with -SkipNetworkProfileCheck for remoting in workgroup</Description>'
     add-Content $unattendFile '  <Order>1</Order>'
-    add-Content $unattendFile '  <Path>Powershell -NoLogo -Command &quot;Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools&quot;</Path>'
+    add-Content $unattendFile '  <Path>Powershell -NoLogo -Command &quot;Enable-PSRemoting -SkipNetworkProfileCheck -Force&quot;</Path>'
     add-Content $unattendFile '  <WillReboot>Never</WillReboot>'
     add-Content $unattendFile '</RunSynchronousCommand>'
-    #add-Content $unattendFile '<RunSynchronousCommand wcm:action="add">'
-    #add-Content $unattendFile '  <Description>Testinstall of Windowsfeature 2</Description>'
-    #add-Content $unattendFile '  <Order>2</Order>'
-    #add-Content $unattendFile "  <Path>Powershell -NoLogo -Command &quot;Install-ADDSForest -DomainName $ADDomainName -CreateDNSDelegation -DomainMode $ADDomainMode -ForestMode $ADForestMode -SafeModeAdministratorPassword $(ConvertTo-SecureString -AsPlainText $ADSafeModeAdministratorPassword -Force) -DatabasePath &quot;$ADDatabasePath&quot; -SysvolPath &quot;$ADSysvolPath&quot; -LogPath &quot;$ADLogPath&quot;&quot;</Path>"
-    #add-Content $unattendFile '  <WillReboot>Always</WillReboot>'
-    #add-Content $unattendFile '</RunSynchronousCommand>'
     add-Content $unattendFile '</RunSynchronous>'
     add-Content $unattendFile '        </component>'
-    ################Test RunSynchronous in Specialise pass, will run as system##################
-        
+    ################RunSynchronous in Specialise pass, will run as system##################
+
     add-Content $unattendFile '    </settings>'
     add-Content $unattendFile '    <settings pass="oobeSystem">'
     add-Content $unattendFile '        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">'
@@ -437,9 +435,11 @@ Get-VM -Name $VMName | Get-VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -
 $Section = "Main"
 $SizeinGB = 60
 # Get settingsfile from github
-if (Test-Path "$env:SystemRoot\Temp\ad_srv_settings.xml") {Remove-Item "$env:SystemRoot\Temp\ad_srv_settings.xml"}
+if (Test-Path "$env:SystemRoot\Temp\$SrvSettingsXMLFile") {Remove-Item "$env:SystemRoot\Temp\$SrvSettingsXMLFile"}
+
 try{
-	Invoke-WebRequest -Uri 'https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/ad_srv_settings.xml' -OutFile "$env:SystemRoot\Temp\ad_srv_settings.xml"
+	Logit "Attempting download of XML settingsfile from https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/$SrvSettingsXMLFile"
+	Invoke-WebRequest -Uri "https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/$SrvSettingsXMLFile" -OutFile "$env:SystemRoot\Temp\$SrvSettingsXMLFile"
 }
 Catch {
 	$ErrorMessage = $_.Exception.Message
@@ -448,47 +448,38 @@ Catch {
 	Break
 }
 sleep -Seconds 2
-[xml]$AdSrvSettings = Get-Content "$env:SystemRoot\Temp\ad_srv_settings.xml"
+[xml]$SrvSettings = Get-Content "$env:SystemRoot\Temp\$SrvSettingsXMLFile"
 $JoinWorkgroup = $DomainOrWorkGroupName
 $OSDAdapter0IPAddressList = $IPAddress
 #Set values for VM creation
 $VHDXFile = "$VMLocation\$VMName\Virtual Hard Disks\$VMName-OSDisk.vhdx"
 
-#Setting MachineDefaults
-$AdminPassword = $AdSrvSettings.Telecomputing.MachineDefaults.AdminPassword
-$OrgName = $AdSrvSettings.Telecomputing.MachineDefaults.OrgName
-$Fullname = $AdSrvSettings.Telecomputing.MachineDefaults.FullName
-$TimeZoneName = $AdSrvSettings.Telecomputing.MachineDefaults.TimeZoneName
-$InputLocale = $AdSrvSettings.Telecomputing.MachineDefaults.InputLocale
-$SystemLocale = $AdSrvSettings.Telecomputing.MachineDefaults.SystemLocale
-$UILanguage = $AdSrvSettings.Telecomputing.MachineDefaults.UILanguage
-$UserLocale = $AdSrvSettings.Telecomputing.MachineDefaults.UserLocale
-$OSDAdapter0Gateways = $AdSrvSettings.Telecomputing.MachineDefaults.OSDAdapter0Gateways
-$OSDAdapter0DNS1 = $AdSrvSettings.Telecomputing.MachineDefaults.OSDAdapter0DNSServerList[0]
-$OSDAdapter0DNS2 = $AdSrvSettings.Telecomputing.MachineDefaults.OSDAdapter0DNSServerList[1]
-$OSDAdapter0SubnetMaskPrefix = $AdSrvSettings.Telecomputing.MachineDefaults.OSDAdapter0SubnetMaskPrefix
-$ProductKey = $AdSrvSettings.Telecomputing.MachineDefaults.ProductKey
-$VMSwitchName = $AdSrvSettings.Telecomputing.MachineDefaults.VMSwitchName
-
-#Setting DomainCreateDefaults
-$ADDomainName = $AdSrvSettings.Telecomputing.DomainCreateDefaults.DomainName
-$ADDomainMode = $AdSrvSettings.Telecomputing.DomainCreateDefaults.DomainMode
-$ADForestMode = $AdSrvSettings.Telecomputing.DomainCreateDefaults.ForestMode
-$ADSafeModeAdministratorPassword = $AdSrvSettings.Telecomputing.DomainCreateDefaults.SafeModeAdministratorPassword
-$ADDatabasePath = $AdSrvSettings.Telecomputing.DomainCreateDefaults.DatabasePath
-$ADSysvolPath = $AdSrvSettings.Telecomputing.DomainCreateDefaults.SysvolPath
-$ADLogPath = $AdSrvSettings.Telecomputing.DomainCreateDefaults.LogPath
+# Setting MachineDefaults
+$AdminPassword = $SrvSettings.Telecomputing.MachineDefaults.AdminPassword
+$OrgName = $SrvSettings.Telecomputing.MachineDefaults.OrgName
+$Fullname = $SrvSettings.Telecomputing.MachineDefaults.FullName
+$TimeZoneName = $SrvSettings.Telecomputing.MachineDefaults.TimeZoneName
+$InputLocale = $SrvSettings.Telecomputing.MachineDefaults.InputLocale
+$SystemLocale = $SrvSettings.Telecomputing.MachineDefaults.SystemLocale
+$UILanguage = $SrvSettings.Telecomputing.MachineDefaults.UILanguage
+$UserLocale = $SrvSettings.Telecomputing.MachineDefaults.UserLocale
+$OSDAdapter0Gateways = $SrvSettings.Telecomputing.MachineDefaults.OSDAdapter0Gateways
+$OSDAdapter0DNS1 = $SrvSettings.Telecomputing.MachineDefaults.OSDAdapter0DNSServerList[0]
+$OSDAdapter0DNS2 = $SrvSettings.Telecomputing.MachineDefaults.OSDAdapter0DNSServerList[1]
+$OSDAdapter0SubnetMaskPrefix = $SrvSettings.Telecomputing.MachineDefaults.OSDAdapter0SubnetMaskPrefix
+$ProductKey = $SrvSettings.Telecomputing.MachineDefaults.ProductKey
+$VMSwitchName = $SrvSettings.Telecomputing.MachineDefaults.VMSwitchName
 
 #Setting DomainDefaults
-$DNSDomain = $AdSrvSettings.Telecomputing.DomainDefaults.DNSDomain
-$DomainNetBios = $AdSrvSettings.Telecomputing.DomainDefaults.DomainNetBios
-$DomainAdmin = $AdSrvSettings.Telecomputing.DomainDefaults.DomainAdmin
-$DomainAdminPassword = $AdSrvSettings.Telecomputing.DomainDefaults.DomainAdminPassword
-$DomainAdminDomain = $AdSrvSettings.Telecomputing.DomainDefaults.DomainAdminDomain
-$MachienObjectOU = $AdSrvSettings.Telecomputing.DomainDefaults.MachienObjectOU
+$DNSDomain = $SrvSettings.Telecomputing.DomainDefaults.DNSDomain
+$DomainNetBios = $SrvSettings.Telecomputing.DomainDefaults.DomainNetBios
+$DomainAdmin = $SrvSettings.Telecomputing.DomainDefaults.DomainAdmin
+$DomainAdminPassword = $SrvSettings.Telecomputing.DomainDefaults.DomainAdminPassword
+$DomainAdminDomain = $SrvSettings.Telecomputing.DomainDefaults.DomainAdminDomain
+$MachienObjectOU = $SrvSettings.Telecomputing.DomainDefaults.MachienObjectOU
 
 #Settings WorkgroupDefaults
-$JoinWorkgroup = $AdSrvSettings.Telecomputing.WorkgroupDefaults.WorkgroupName
+$JoinWorkgroup = $SrvSettings.Telecomputing.WorkgroupDefaults.WorkgroupName
 
 Logit "Starting"
 Logit "WIM File is $SourceFile"
