@@ -1,9 +1,12 @@
 Workflow Configure-LabADSrv {
 param(
-    [string] $VMName
+    [Parameter(Mandatory=$true)]
+	[string] $VMName,
+	[Parameter(Mandatory=$true)]
+    [PSCredential] $VMCredential,
+	[parameter(mandatory=$True,HelpMessage="Name of XML file with serversettings.")]
+	[string]$SrvSettingsXMLFile
 )
-
-$VMCredential = Get-AutomationPSCredential -Name "CMLabCred-SrvLocalAdmin"
 
 Inlinescript{ 
 	Function Logit{
@@ -11,7 +14,7 @@ Inlinescript{
 		$TextBlock2 = $args[1]
 		$TextBlock3 = $args[2]
 		$Stamp = Get-Date -Format o
-		Write-Output "[$Stamp] [$Section - $TextBlock1]"
+		Write-Verbose "[$Stamp] [$Section - $TextBlock1]"
 	}       
     $Section = "$env:COMPUTERNAME"
 	Logit ("Successfully remoted to " + $env:COMPUTERNAME)
@@ -45,8 +48,10 @@ Inlinescript{
 		Remove-Item "$env:SystemRoot\Temp\ad_srv_settings.xml"
 	}
 	try{
-		Logit "Attempting to download settings XMLFile from github (https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/ad_srv_settings.xml)"
-		Invoke-WebRequest -Uri 'https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/ad_srv_settings.xml' -OutFile "$env:SystemRoot\Temp\ad_srv_settings.xml"
+		do {
+			Logit "Attempting download of XML settingsfile from https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/$SrvSettingsXMLFile"
+			sleep 3      
+		} until(Invoke-WebRequest -Uri "https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/$SrvSettingsXMLFile" -OutFile "$env:SystemRoot\Temp\$SrvSettingsXMLFile" -PassThru | Where-Object {$_.StatusCode -eq '200'})
 		Logit "XMLFile downloaded from github"
 	}
 	Catch {
@@ -56,7 +61,7 @@ Inlinescript{
 		Break
 	}
 	sleep -Seconds 2
-	[xml]$AdSrvSettings = Get-Content "$env:SystemRoot\Temp\ad_srv_settings.xml"
+	[xml]$AdSrvSettings = Get-Content "$env:SystemRoot\Temp\$SrvSettingsXMLFile"
 	Logit "Getting settings from XMLFile into variables"
 
 	#Setting MachineDefaults
@@ -117,8 +122,8 @@ Inlinescript{
 
 } -PSComputerName $VMName -PSCredential $VMCredential
 
-Write-Output "Restarting computer $VMName to complete Active Directory installation"
-Restart-Computer -PSComputerName $VMName -PSCredential $VMCredential -Wait -For PowerShell -Force
+Write-Verbose "Restarting computer $VMName to complete Active Directory installation"
+Restart-Computer -PSComputerName $VMName -PSCredential $VMCredential -Wait -For WinRM -Force
 
 Inlinescript {
 
@@ -127,7 +132,7 @@ Inlinescript {
 		$TextBlock2 = $args[1]
 		$TextBlock3 = $args[2]
 		$Stamp = Get-Date -Format o
-		Write-Output "[$Stamp] [$Section - $TextBlock1]"
+		Write-Verbose "[$Stamp] [$Section - $TextBlock1]"
 	}       
     $Section = "$env:COMPUTERNAME"
 	Logit ("Successfully remoted to " + $env:COMPUTERNAME)
@@ -182,5 +187,5 @@ Inlinescript {
 	Restart-Service "DHCP Server" -Force -Verbose
 
 } -PSComputerName $VMName -PSCredential $VMCredential
-	Write-Output "Done"
+	Write-Verbose "Done"
 }
