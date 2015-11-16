@@ -1,23 +1,4 @@
-﻿<#
-Created:	 2013-12-16
-Version:	 1.0
-Author       Mikael Nystrom and Johan Arwidmark       
-Homepage:    http://www.deploymentfundamentals.com
-
-Disclaimer:
-This script is provided "AS IS" with no warranties, confers no rights and 
-is not supported by the authors or DeploymentArtist.
-
-Author - Mikael Nystrom
-    Twitter: @mikael_nystrom
-    Blog   : http://deploymentbunny.com
-
-Author - Johan Arwidmark
-    Twitter: @jarwidmark
-    Blog   : http://deploymentresearch.com
-#>
-
-Param(
+﻿Param(
 [parameter(mandatory=$False,HelpMessage="Path and name of WIM file.")]
 [ValidateNotNullOrEmpty()]
 [string]$SourceFile,
@@ -72,7 +53,7 @@ $TextBlock1 = $args[0]
 $TextBlock2 = $args[1]
 $TextBlock3 = $args[2]
 $Stamp = Get-Date -Format o
-Write-Output "[$Stamp] [$Section - $TextBlock1]"
+Write-Verbose "[$Stamp] [$Section - $TextBlock1]"
 }
 Function CheckVHDXFile($VHDXFile){
 # Check if VHDX exists
@@ -438,8 +419,11 @@ $SizeinGB = 60
 if (Test-Path "$env:SystemRoot\Temp\$SrvSettingsXMLFile") {Remove-Item "$env:SystemRoot\Temp\$SrvSettingsXMLFile"}
 
 try{
-	Logit "Attempting download of XML settingsfile from https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/$SrvSettingsXMLFile"
-	Invoke-WebRequest -Uri "https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/$SrvSettingsXMLFile" -OutFile "$env:SystemRoot\Temp\$SrvSettingsXMLFile"
+	do {
+		Logit "Attempting download of XML settingsfile from https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/$SrvSettingsXMLFile"
+		sleep 3      
+	} until(Invoke-WebRequest -Uri "https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/$SrvSettingsXMLFile" -OutFile "$env:SystemRoot\Temp\$SrvSettingsXMLFile" -PassThru | Where-Object {$_.StatusCode -eq '200'})
+	Logit "XMLFile downloaded from github"
 }
 Catch {
 	$ErrorMessage = $_.Exception.Message
@@ -587,6 +571,12 @@ if (Get-VM -Name $VMName){
 		Logit "Waiting for $VMName to start"
 		Start-Sleep -Seconds 1
 	}
+
+	do {
+		Logit "Waiting for VM $VMName to become accessible from VMHost"
+		sleep 3      
+	} until(Test-NetConnection $VMName -ErrorAction SilentlyContinue | Where-Object {$_.TcpTestSucceeded} )
+
 }
 else {Logit "Unable to start VM $VMName because it does not exist?"}
 #Notify
