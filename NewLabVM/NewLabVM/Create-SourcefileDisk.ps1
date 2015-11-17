@@ -22,7 +22,7 @@ Workflow Create-SourcefileDisk {
 			Get-Disk -number {$_.DiskNumber} | `
 			Initialize-Disk -PartitionStyle MBR -PassThru | `
 			New-Partition -UseMaximumSize -AssignDriveLetter:$false -MbrType IFS | `
-			Format-Volume -Confirm:$false -FileSystem NTFS -force | `
+			Format-Volume -Confirm:$false -FileSystem NTFS -NewFileSystemLabel 'Data' -Force | `
 			Get-Partition | `
 			Add-PartitionAccessPath -AssignDriveLetter -PassThru | `
 			get-volume).DriveLetter
@@ -58,7 +58,7 @@ Workflow Create-SourcefileDisk {
  
 		# This will create a timestamp like yyyy-mm-yy
 		$TimeStamp = Get-Date -uformat "%Y-%m%-%d"
-		$RoboCopyParams = @("$SourcefilesDir","$VHDXPath","/MIR","/LOG+:$env:SystemRoot\Temp\SourcefilesRobocopy-$TimeStamp.log","/R:3","/W:30")
+		$RoboCopyParams = @("$SourcefilesDir","$VHDXPath\Source","/MIR","/LOG+:$env:SystemRoot\Temp\SourcefilesRobocopy-$TimeStamp.log","/R:3","/W:30")
 		Write-Verbose "Copying sourcefiles to VHDx with robocopy params $RoboCopyParams"
 		& Robocopy $RoboCopyParams
 		Write-Verbose "Robocopy operation exitcode is $LASTEXITCODE, more info can be found in logfile $env:SystemRoot\Temp\SourcefilesRobocopy-$TimeStamp.log"
@@ -72,6 +72,7 @@ Workflow Create-SourcefileDisk {
 	Inlinescript {
 		Write-Verbose "Remotely connected to $env:COMPUTERNAME"
 		Write-Verbose "Setting disk in online mode and disables readonly"
-		Get-Disk | Where {$_.OperationalStatus -eq 'offline'} | Set-Disk -IsOffline $false -IsReadOnly $false
+		Get-Disk | Where {$_.OperationalStatus -eq 'offline'} | Set-Disk -IsReadOnly:$false
+		Get-Disk | Where {$_.OperationalStatus -eq 'offline'} | Set-Disk -IsOffline:$false 
 	} -PSComputerName $VMName -PSCredential $VMCredential
 }
