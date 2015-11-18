@@ -36,7 +36,7 @@ workflow Install-CMSQLSrv
             Write-Verbose "Starting SQLserver installation"
             if (Test-Path "$SourceFilesParentDir\SQL\SQL2014\Setup.exe") {
                 # Save SQL unattendedconfiguration from SMA Asset to answerfile
-                $SQLSrvUnattend | Out-File "$SourceFilesParentDir\SQL\SQL2014\ConfigurationFile.ini"
+                $SQLSrvUnattend | Out-File "$SourceFilesParentDir\SQL\SQL2014\ConfigurationFile.ini" -Encoding utf8
                 # Save SQL commandline arguments as array
                 $SQLSrvUnattendArg = @("/ConfigurationFile=$([char]34)$SourceFilesParentDir\SQL\SQL2014\ConfigurationFile.ini$([char]34)","/SQLSVCPASSWORD=$([char]34)$CMSQLServiceAccountCredentialPassword$([char]34)","/AGTSVCPASSWORD=$([char]34)$CMSQLServiceAccountCredentialPassword$([char]34)","/SAPWD=$([char]34)$CMSQLServerSAAccountCredentialPassword$([char]34)")
                 # Call SQL Setup.exe with arguments for unattended installation
@@ -115,10 +115,10 @@ workflow Install-CMSQLSrv
 
             # Set Firewall inbound rules for SQL
             Write-Verbose "Setting Firewall inbound rules for SQL"            
-            # New-NetFirewallRule -DisplayName “SQL Admin Connection” -Direction Inbound –Protocol TCP –LocalPort 1434 -Action allow
-            # New-NetFirewallRule -DisplayName “SQL Debugger/RPC” -Direction Inbound –Protocol TCP –LocalPort 135 -Action allow
-            New-NetFirewallRule -DisplayName “SQL Server” -Direction Inbound –Protocol TCP –LocalPort 1433 -Action allow
-            New-NetFirewallRule -DisplayName “SQL Service Broker” -Direction Inbound –Protocol TCP –LocalPort 4022 -Action allow
+            # New-NetFirewallRule -DisplayName "SQL Admin Connection" -Direction Inbound –Protocol TCP –LocalPort 1434 -Action allow
+            # New-NetFirewallRule -DisplayName "SQL Debugger/RPC" -Direction Inbound –Protocol TCP –LocalPort 135 -Action allow
+            New-NetFirewallRule -DisplayName "SQL Server" -Direction Inbound –Protocol TCP –LocalPort 1433 -Action allow
+            New-NetFirewallRule -DisplayName "SQL Service Broker" -Direction Inbound –Protocol TCP –LocalPort 4022 -Action allow
             
             Write-Output "Successfully configured SQLserver(TCPPort, MinMax Memory and Windows Firewall)"                 
         }
@@ -128,4 +128,7 @@ workflow Install-CMSQLSrv
         }
                     
     } -PSComputerName $VMName -PSCredential $VMCredential -PSAuthentication CredSSP # CredSSP required for SQLsetup to be able to verify password on ADAccount
+	
+	Write-Verbose "Restarting computer $VMName to complete SQLServer installation"
+	Restart-Computer -PSComputerName $VMName -PSCredential $VMCredential -Wait -For WinRM -Force
 }
