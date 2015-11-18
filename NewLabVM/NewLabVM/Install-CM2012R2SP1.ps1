@@ -17,7 +17,13 @@ workflow Install-CM2012R2SP1
         try {
             Write-Verbose "Verifying Configuration Manager is installed"
             # Verifying Configuration Manager is installed
-            
+			if (Test-Path HKLM:\SOFTWARE\Microsoft\SMS\Setup) {
+                Write-host "Configuration Manager version $((Get-ItemProperty HKLM:\SOFTWARE\Microsoft\SMS\Setup)."Full Version") installed, proceeding"
+            }
+            else {
+                Write-Error "Configuration Manager installation not found, aborting"
+                Throw "Configuration Manager installation not found, aborting"
+            }    
             if (Test-Path "$SourceFilesParentDir\SystemCenter\ConfigMgr2012R2wSP1\SMSSETUP\BIN\X64\Configmgr2012R2SP1.msi") {
                 $CM2012R2SP1UnattendArg = @("/qn","/L*v","$env:SystemRoot\Temp\CM2012R2SP1Install.log","REBOOT=ReallySuppress")
                 # Call MicrosoftDeploymentToolkit2013_x64.msi with arguments for unattended installation
