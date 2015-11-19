@@ -22,7 +22,13 @@ workflow Create-ADuser {
             [PSCredential] $VMCredential
       
         )
-		$UserName = $NewUserCredentialAsset.UserName
+		# Check if Username in credential contains \ for domain login, remove domainpart if so
+		if ($NewUserCredentialAsset.UserName.Contains('\')) {
+			$UserName = ($NewUserCredentialAsset.UserName.Split('\'))[1]
+		} else {
+			$UserName = $NewUserCredentialAsset.UserName
+		}
+		
 		$UserPassword = $NewUserCredentialAsset.Password
 
         Inlinescript {
@@ -33,6 +39,7 @@ workflow Create-ADuser {
             $Description = $using:Description
             $CustomerDomainController = $using:CustomerDomainController
             $AdminRights = $using:AdminRights
+			$SchemaAdminRights = $using:SchemaAdminRights
 
             try {
                 Import-Module ActiveDirectory
