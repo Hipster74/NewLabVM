@@ -51,7 +51,8 @@ workflow Create-ADuser {
 
                         foreach ($ou in $UserOUReverse) {
                             if(!(Test-Path "AD:\$ou,$OUPath$((Get-ADDomain).distinguishedname)")) {
-                                New-ADOrganizationalUnit -Name $ou.TrimStart('OU=') -Path "$OUPath" + "$((Get-ADDomain).distinguishedname)" -ProtectedFromAccidentalDeletion $true
+								Write-Verbose "Creating $ou in path $OUPath$((Get-ADDomain).distinguishedname)"
+                                New-ADOrganizationalUnit -Name $ou.TrimStart('OU=') -Path "$OUPath$((Get-ADDomain).distinguishedname)" -ProtectedFromAccidentalDeletion $true
                             }
                             $OUPath = $ou + ',' + $OUPath
                             Write-Verbose "Creating OU $OUPath"
