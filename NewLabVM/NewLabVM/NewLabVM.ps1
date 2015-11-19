@@ -422,14 +422,14 @@ try{
 	do {
 		Logit "Attempting download of XML settingsfile from https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/$SrvSettingsXMLFile"
 		sleep 3      
-	} until(Invoke-WebRequest -Uri "https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/$SrvSettingsXMLFile" -OutFile "$env:SystemRoot\Temp\$SrvSettingsXMLFile" -PassThru | Where-Object {$_.StatusCode -eq '200'})
+	} until(Invoke-WebRequest -Uri "https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/$SrvSettingsXMLFile" -UseBasicParsing -OutFile "$env:SystemRoot\Temp\$SrvSettingsXMLFile" -ErrorAction SilentlyContinue -PassThru | Where-Object {$_.StatusCode -eq '200'})
 	Logit "XMLFile downloaded from github"
 }
 Catch {
 	$ErrorMessage = $_.Exception.Message
 	Logit "Failed to download .xml from github: $ErrorMessage"
-	Write-Error $ErrorMessage
-	Break
+	Write-Error "Failed to download .xml from github with error $ErrorMessage"
+	Throw "Failed to download .xml from github"
 }
 sleep -Seconds 2
 [xml]$SrvSettings = Get-Content "$env:SystemRoot\Temp\$SrvSettingsXMLFile"
@@ -574,8 +574,8 @@ if (Get-VM -Name $VMName){
 
 	do {
 		Logit "Waiting for VM $VMName to become accessible from VMHost"
-		sleep 3      
-	} until(Test-NetConnection $VMName -ErrorAction SilentlyContinue | Where-Object {$_.TcpTestSucceeded} )
+		sleep 5    
+	} until(Test-NetConnection $VMName -CommonTCPPort WINRM | Where-Object {$_.TcpTestSucceeded} )
 
 }
 else {Logit "Unable to start VM $VMName because it does not exist?"}
