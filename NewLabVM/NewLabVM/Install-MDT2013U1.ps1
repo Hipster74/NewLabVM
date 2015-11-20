@@ -16,12 +16,28 @@ workflow Install-MDT2013U1
         try {
             Write-Verbose "Starting MDT 2013 Update 1 installation"
             if (Test-Path "$SourceFilesParentDir\MDT\MicrosoftDeploymentToolkit2013_x64.msi") {
+                # Save MDT 2013 Update 1 commandline arguments as array
                 $MDT2013U1UnattendArg = @("/qn","/L*v","$env:SystemRoot\Temp\MDT2013U1Install.log","REBOOT=ReallySuppress")
-                # Call MicrosoftDeploymentToolkit2013_x64.msi with arguments for unattended installation
-                & "$SourceFilesParentDir\MDT\MicrosoftDeploymentToolkit2013_x64.msi" $MDT2013U1UnattendArg
-                # Verify MDT 2013 Update 1 installation
-                if (select-string -path "$env:SystemRoot\Temp\MDT2013U1Install.log" -pattern "Installation success or error status: 0" -allmatches –simplematch) {
-                    Write-Verbose "MDT 2013 Update 1 installed successfully"
+                # Call MDT 2013 Update 1 MSI with arguments for unattended installation
+                $MDT2013U1InstallJob = Start-Job -Name 'MDT2013U1Install'  -ScriptBlock {
+    		        param(
+        		        [parameter(Mandatory=$true)]
+        			    $MDT2013U1UnattendArg,
+                        [parameter(Mandatory=$true)]
+        			    $SourceFilesParentDir
+                    )
+    			    Start-Process -FilePath "$SourceFilesParentDir\SystemCenter\ConfigMgr2012CU2\CM12_SP2R2SP1CU2-KB3100144-X64-ENU.exe" -ArgumentList $MDT2013U1UnattendArg -Wait
+			    
+                } -ArgumentList $MDT2013U1UnattendArg, $SourceFilesParentDir
+			    
+                # Wait for installation to finish
+                While (($MDT2013U1InstallJob | Get-Job).State -eq 'Running') {
+                    Write-Output "Heartbeat from MDT 2013 Update 1 Installation...."
+                    Start-Sleep -Seconds 10
+                }
+				# Verify MDT 2013 Update 1 installation
+                if (select-string -Path "$env:SystemRoot\Temp\MDT2013U1Install.log" -Pattern "Installation success or error status: 0" -AllMatches -SimpleMatch) {
+                    Write-Output "MDT 2013 Update 1 installed successfully"
                 }
                 else {
                     Write-Error "MDT 2013 Update 1 installation failed"
