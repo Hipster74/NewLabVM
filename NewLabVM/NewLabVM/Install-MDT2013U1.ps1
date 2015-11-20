@@ -6,7 +6,7 @@ workflow Install-MDT2013U1
         [string]$VMName,
 		[Parameter(Mandatory=$true)]
 		[PSCredential] $VMCredential,
-        [Parameter(Mandatory=$true,HelpMessage="Default is datadisk on d:\Source")]
+        [Parameter(Mandatory=$true,HelpMessage="Default is datadisk on e:\Source")]
         [string]$SourceFilesParentDir
     )    
     
@@ -20,8 +20,8 @@ workflow Install-MDT2013U1
                 # Call MicrosoftDeploymentToolkit2013_x64.msi with arguments for unattended installation
                 & "$SourceFilesParentDir\MDT\MicrosoftDeploymentToolkit2013_x64.msi" $MDT2013U1UnattendArg
                 # Verify MDT 2013 Update 1 installation
-                if (($LASTEXITCODE = '0') -or ($LASTEXITCODE = '3010')) {
-                    Write-Output "MDT 2013 Update 1 installed successfully"
+                if (select-string -path "$env:SystemRoot\Temp\MDT2013U1Install.log" -pattern "Installation success or error status: 0" -allmatches –simplematch) {
+                    Write-Verbose "MDT 2013 Update 1 installed successfully"
                 }
                 else {
                     Write-Error "MDT 2013 Update 1 installation failed"
