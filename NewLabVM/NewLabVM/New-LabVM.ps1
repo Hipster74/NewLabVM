@@ -1,51 +1,55 @@
 ﻿Param(
-[parameter(mandatory=$False,HelpMessage="Path and name of WIM file.")]
-[ValidateNotNullOrEmpty()]
-[string]$SourceFile,
+	[parameter(mandatory=$False,HelpMessage="Path and name of WIM file.")]
+	[ValidateNotNullOrEmpty()]
+	[string]$SourceFile,
 
-[parameter(mandatory=$True,HelpMessage="Name of XML file with serversettings.")]
-[ValidateNotNullOrEmpty()]
-[string]$SrvSettingsXMLFile,
+	[parameter(mandatory=$True,HelpMessage="Name of XML file with serversettings.")]
+	[ValidateNotNullOrEmpty()]
+	[string]$SrvSettingsXMLFile,
 
-[parameter(mandatory=$true,HelpMessage="Name of VM.")]
-[ValidateLength(1,14)]
-$VMName,
+	[parameter(mandatory=$true,HelpMessage="Name of VM.")]
+	[ValidateLength(1,14)]
+	$VMName,
 
-[parameter(mandatory=$true,HelpMessage="VM Location path")]
-[ValidateNotNullOrEmpty()]
-$VMLocation,
+	[parameter(mandatory=$true,HelpMessage="VM Location path")]
+	[ValidateNotNullOrEmpty()]
+	$VMLocation,
 
-[parameter(mandatory=$true,HelpMessage="Memory in megabytes")]
-[ValidateSet("1024","2048","4096","6144","8192","12288","14336","16384","24576","32768")]
-$VMMemory,
+	[parameter(mandatory=$true,HelpMessage="Memory in megabytes")]
+	[ValidateSet("1024","2048","4096","6144","8192","12288","14336","16384","24576","32768")]
+	$VMMemory,
 
-[parameter(mandatory=$true,HelpMessage="type IP address or type DHCP")]
-[ValidateNotNullOrEmpty()]
-$IPAddress,
+	[parameter(mandatory=$true,HelpMessage="type IP address or type DHCP")]
+	[ValidateNotNullOrEmpty()]
+	$IPAddress,
 
-[parameter(mandatory=$false,HelpMessage="VLANID (leave blank for 0")]
-[ValidateNotNullOrEmpty()]
-$VLANID,
+	[parameter(mandatory=$false,HelpMessage="VLANID (leave blank for 0")]
+	[ValidateNotNullOrEmpty()]
+	$VLANID,
 
-[parameter(mandatory=$true,HelpMessage="Build Based on DIFF disk or CREATE a disk")]
-[ValidateSet("DIFF","CREATE")]
-$DifforCreate,
+	[parameter(mandatory=$true,HelpMessage="Build Based on DIFF disk or CREATE a disk")]
+	[ValidateSet("DIFF","CREATE")]
+	$DifforCreate,
 
-[parameter(mandatory=$true,HelpMessage="BIOS or UEFI")]
-[ValidateSet("BIOS","UEFI")]
-$VMType,
+	[parameter(mandatory=$true,HelpMessage="BIOS or UEFI")]
+	[ValidateSet("BIOS","UEFI")]
+	$VMType,
 
-[parameter(mandatory=$false,HelpMessage="ISO image to mount")]
-[ValidateNotNullOrEmpty()]
-$ISO,
+	[parameter(mandatory=$false,HelpMessage="ISO image to mount")]
+	[ValidateNotNullOrEmpty()]
+	$ISO,
 
-[parameter(mandatory=$false,HelpMessage="Add extra datadisk (size)")]
-[ValidateNotNullOrEmpty()]
-$AddDataDisk="NoDisk",
+	[parameter(mandatory=$false,HelpMessage="Add extra datadisk (size)")]
+	[ValidateNotNullOrEmpty()]
+	$AddDataDisk="NoDisk",
 
-[parameter(mandatory=$false,HelpMessage="Join DOMAIN or WORKGROUP")]
-[ValidateSet("DOMAIN","WORKGROUP")]
-$DomainOrWorkGroup
+	[parameter(mandatory=$false,HelpMessage="Join DOMAIN or WORKGROUP")]
+	[ValidateSet("DOMAIN","WORKGROUP")]
+	$DomainOrWorkGroup,
+
+	[parameter(mandatory=$false,HelpMessage="If VM already exists, delete it")]
+	[bool]$Force
+
 )
 
 Function Logit{
@@ -53,50 +57,53 @@ $TextBlock1 = $args[0]
 $TextBlock2 = $args[1]
 $TextBlock3 = $args[2]
 $Stamp = Get-Date -Format o
-Write-Verbose "[$Stamp] [$Section - $TextBlock1]"
+Write-Verbose "[$Stamp] [$Section - $TextBlock1]" -Verbose
 }
 Function CheckVHDXFile($VHDXFile){
-# Check if VHDX exists
-Logit "Check if $VHDXFile exists"
-$FileExist = Test-Path $VHDXFile
+	# Check if VHDX exists
+	Logit "Check if $VHDXFile exists"
+	$FileExist = Test-Path $VHDXFile
 
-If ($FileExist -like 'True') {
-Logit "Woops, you already have VHDXfile, exit"
-exit
-} else {
-Logit "Not yet created"
-}
+	If ($FileExist -like 'True') {
+		Logit "VHDXfile already exists , exit"
+		Return $True
+	} else {
+		Logit "VHDXFile Not yet created"
+		Return $False
+	}
 }
 Function CheckWIMFile($SourceFile){
-# Check if WIMFile exists
-Logit "Check if $SourceFile exists"
-If($SourceFile -like ""){
-	Logit "No WIM file specified, will create blank disk and set to PXE"
-	$SourceFile = 'NoFile'
-	Return $true
-}else{
-Logit "Testing $SourceFile"
-If(Test-Path $SourceFile){
-	Logit "$SourceFile found"
-	Return $True
-}else{
-	Logit "Could not find the WIM file, return false"
-	Return $False
+	# Check if WIMFile exists
+	Logit "Check if $SourceFile exists"
+	If($SourceFile -like "") {
+		Logit "No WIM file specified, will create blank disk and set to PXE"
+		$SourceFile = 'NoFile'
+		Return $true
+	} else {
+		Logit "Testing $SourceFile"
+		If(Test-Path $SourceFile) {
+			Logit "$SourceFile found"
+			Return $True
+		
+		} else {
+			Logit "Could not find the WIM file, return false"
+			Return $False
+		}
+	}
 }
-}
-}
-Function CheckVM($VMName){
-# Check if VM exists
-Logit "Check if $VMName exists"
-$VMexist = Get-VM -Name $VMName -ErrorAction SilentlyContinue
-Logit $VMexist.Name
-If($VMexist.Name -like $VMName)
-{
-  Logit "Woops, you already have a VM named $VMName, exit"
-exit
-} else {
-  Logit "Not yet created"
-}
+Function CheckVM($VMName) {
+	# Check if VM exists
+	Logit "Check if $VMName exists"
+	$VMexist = Get-VM -Name $VMName -ErrorAction SilentlyContinue
+	Logit "$($VMexist.Name)"
+	If($VMexist.Name -like $VMName) {
+		Logit "VM with name $VMName already exists"
+		Return $True
+	
+	} else {
+		Logit "Not yet created"
+		Return $False
+	}
 
 }
 Function DiskPartTextFile($VHDXDiskNumber){
@@ -386,30 +393,30 @@ DiskPartTextFile $VHDXDiskNumber
 & diskpart.exe /s .\diskpart.txt | Out-Null
 }
 Function Cleanup($VHDXFile){
-$Section = "CleanUp"
-Logit "Dismount $VHDXFile"
-Dismount-DiskImage -ImagePath $VHDXFile
+	$Section = "CleanUp"
+	Logit "Dismount $VHDXFile"
+	Dismount-DiskImage -ImagePath $VHDXFile
 }
 Function CreateVMForBios($VMName,$VMLocation,$VHDXFile){
-Logit "Creating $VMName"
-$VM = New-VM –Name $VMname –MemoryStartupBytes ([int64]$VMMemory*1024*1024) -Generation 1 –VHDPath $VHDXFile -SwitchName $VMSwitchName -Path $VMLocation
-Add-VMDvdDrive -VM $VM
-Set-VMProcessor -CompatibilityForMigrationEnabled $True -VM $VM
+	Logit "Creating $VMName"
+	$VM = New-VM –Name $VMname –MemoryStartupBytes ([int64]$VMMemory*1024*1024) -Generation 1 –VHDPath $VHDXFile -SwitchName $VMSwitchName -Path $VMLocation
+	Add-VMDvdDrive -VM $VM
+	Set-VMProcessor -CompatibilityForMigrationEnabled $True -VM $VM
 }
 Function CreateVMForUEFI($VMName,$VMLocation,$VHDXFile){
-Logit "Creating $VMName"
-$VM = New-VM –Name $VMname –MemoryStartupBytes ([int64]$VMMemory*1024*1024)  -Generation 2 –VHDPath $VHDXFile -SwitchName $VMSwitchName -Path $VMLocation
-Add-VMDvdDrive -VM $VM
-Set-VMProcessor -CompatibilityForMigrationEnabled $True -VM $VM
+	Logit "Creating $VMName"
+	$VM = New-VM –Name $VMname –MemoryStartupBytes ([int64]$VMMemory*1024*1024)  -Generation 2 –VHDPath $VHDXFile -SwitchName $VMSwitchName -Path $VMLocation
+	Add-VMDvdDrive -VM $VM
+	Set-VMProcessor -CompatibilityForMigrationEnabled $True -VM $VM
 }
 Function MountISO($VMName,$ISO){
-Logit "Mounting $ISO on $VMName"
+	Logit "Mounting $ISO on $VMName"
 }
 Function EnablePXEBoot($VMName){
-Logit "Enable PXE on $VMName"
+	Logit "Enable PXE on $VMName"
 }
 Function SetVLANID($VMName,$VLANID){
-Get-VM -Name $VMName | Get-VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $VLANID
+	Get-VM -Name $VMName | Get-VMNetworkAdapter | Set-VMNetworkAdapterVlan -Access -VlanId $VLANID
 }
 
 # Main
@@ -418,19 +425,21 @@ $SizeinGB = 60
 # Get settingsfile from github
 if (Test-Path "$env:SystemRoot\Temp\$SrvSettingsXMLFile") {Remove-Item "$env:SystemRoot\Temp\$SrvSettingsXMLFile"}
 
-try{
-	do {
-		Logit "Attempting download of XML settingsfile from https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/$SrvSettingsXMLFile"
-		sleep 3      
-	} until(Invoke-WebRequest -Uri "https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/$SrvSettingsXMLFile" -UseBasicParsing -OutFile "$env:SystemRoot\Temp\$SrvSettingsXMLFile" -ErrorAction SilentlyContinue -PassThru | Where-Object {$_.StatusCode -eq '200'})
-	Logit "XMLFile downloaded from github"
-}
-Catch {
-	$ErrorMessage = $_.Exception.Message
-	Logit "Failed to download .xml from github: $ErrorMessage"
-	Write-Error "Failed to download .xml from github with error $ErrorMessage"
-	Throw "Failed to download .xml from github"
-}
+$WebRequest = $false
+$i = 1
+do {
+	if ($i -ge 10) {Write-Error "Failed to download XMLFile from GitHub after $i retries"; Throw "Failed to download XMLFile from GitHub after $i retries"}
+
+    Logit "Attempt $i to download XML settingsfile from https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/$SrvSettingsXMLFile"
+	$WebRequest = Invoke-WebRequest -Uri "https://raw.github.com/Hipster74/NewLabVM/master/NewLabVM/NewLabVM/$SrvSettingsXMLFile" -UseBasicParsing -OutFile "$env:SystemRoot\Temp\$SrvSettingsXMLFile" -PassThru
+	if (($WebRequest).statuscode -eq '200' -and (Test-Path "$env:SystemRoot\Temp\$SrvSettingsXMLFile")){
+	    Logit "Successfully downloaded XMLFile from GitHub"
+        $WebRequest = $true
+    } 
+    sleep 3
+	$i++
+} until($WebRequest)
+
 sleep -Seconds 2
 [xml]$SrvSettings = Get-Content "$env:SystemRoot\Temp\$SrvSettingsXMLFile"
 $JoinWorkgroup = $DomainOrWorkGroupName
@@ -473,15 +482,40 @@ Logit "VHDX File size is set to $SizeinGB GB"
 Logit "VMType set to $VMType"
 Logit "IP set to $OSDAdapter0IPAddressList"
 
-# Check to see if the file already exist
+# Check to see if the Virtual Machine already exists
 $Section = "CheckVM"
-CheckVM $VMName
+if ((CheckVM $VMName)) {
+	if ($Force) {
+		Logit "VM $VMName found and Forceparameter set, shutdown and delete VM"
+		Logit "Getting path to $VMName harddrives"
+		$VM = Get-VM -Name $VMName
+		$VMLocation = $VM.ConfigurationLocation
+		Logit "Path to $VMName is $VMLocation"
+	
+		Logit "Shutting down VM $VMName"
+		Get-VM -Name $VMName | Stop-VM -Force
+		Logit "Removing VM $VMName"
+		Get-VM $VMName | Remove-VM -Force
+	
+		Logit "Renaming VMFolder to $VMName" + "Bak as backup"
+		Rename-Item -Path $VM.ConfigurationLocation -NewName "$($VM.name)Bak" -Force
 
-# Check to see if the file already exist
+	} else {
+		Logit "VM $VMName found and Forceparameter NOT set, aborting to avoid dataloss"
+		Write-Output "VM $VMName already exists, specify Force parameter to delete and create new VM, exiting"
+		Throw "VM $VMName already exists, specify Force parameter to delete and create new VM, exiting"
+	}
+
+} else {
+	Logit "VM $VMName not found, proceeding"
+
+}
+
+# Check to see if the VHDXfile already exist
 $Section = "CheckVHDXFile"
 CheckVHDXFile $VHDXFile
 
-# Check to see if the file already exist
+# Check to see if the OS WIMFile already exist
 $Section = "CheckWIMFile"
 $CheckWIMFileResult = CheckWIMFile $SourceFile
 if (!($CheckWIMFileResult)) {
@@ -492,75 +526,97 @@ Logit "The WIMfile is set to $SourceFile"
 
 # Create unattend.xml
 If ($DifforCreate -like 'Diff'){
-}else{
-If ($SourceFile -like 'NoFile'){Logit "No need for any unattend.xml"}else{
-$Section = "Create Unattend XML"
-Logit "CreateUnattendFile $VMName $JoinWorkgroup $ProductKey $OrgName $Fullname $TimeZoneName $InputLocale $SystemLocale $UILanguage $UserLocale $OSDAdapter0DNS1 $OSDAdapter0DNS2 $DNSDomain $OSDAdapter0IPAddressList $OSDAdapter0Gateways $OSDAdapter0SubnetMaskPrefix $AdminPassword $ADDomainName $ADDomainMode $ADForestMode $ADSafeModeAdministratorPassword $ADDatabasePath $ADSysvolPath $ADLogPath"
-CreateUnattendFile $VMName $JoinWorkgroup $ProductKey $OrgName $Fullname $TimeZoneName $InputLocale $SystemLocale $UILanguage $UserLocale $OSDAdapter0DNS1 $OSDAdapter0DNS2 $DNSDomain $OSDAdapter0IPAddressList $OSDAdapter0Gateways $OSDAdapter0SubnetMaskPrefix $AdminPassword $ADDomainName $ADDomainMode $ADForestMode $ADSafeModeAdministratorPassword $ADDatabasePath $ADSysvolPath $ADLogPath
-}}
+} else {
+	If ($SourceFile -like 'NoFile'){
+		Logit "No need for any unattend.xml"
+	} else {
+		$Section = "Create Unattend XML"
+		Logit "CreateUnattendFile $VMName $JoinWorkgroup $ProductKey $OrgName $Fullname $TimeZoneName $InputLocale $SystemLocale $UILanguage $UserLocale $OSDAdapter0DNS1 $OSDAdapter0DNS2 $DNSDomain $OSDAdapter0IPAddressList $OSDAdapter0Gateways $OSDAdapter0SubnetMaskPrefix $AdminPassword $ADDomainName $ADDomainMode $ADForestMode $ADSafeModeAdministratorPassword $ADDatabasePath $ADSysvolPath $ADLogPath"
+		CreateUnattendFile $VMName $JoinWorkgroup $ProductKey $OrgName $Fullname $TimeZoneName $InputLocale $SystemLocale $UILanguage $UserLocale $OSDAdapter0DNS1 $OSDAdapter0DNS2 $DNSDomain $OSDAdapter0IPAddressList $OSDAdapter0Gateways $OSDAdapter0SubnetMaskPrefix $AdminPassword $ADDomainName $ADDomainMode $ADForestMode $ADSafeModeAdministratorPassword $ADDatabasePath $ADSysvolPath $ADLogPath
+	}
+}
 
 #Create VHDx file
-If ($DifforCreate -like 'Diff'){CreateVHDXDiff $VHDXFile $VMName $VMLocation
-}else{
-If ($SourceFile -like 'NoFile'){CreateVHDXBlank $VHDXFile $SizeinGB $VMName $VMLocation
-}else{
-Switch ($VMType){
-BIOS{
-$Section = "CreateVHDX"
-CreateVHDXForBIOS $SourceFile $VHDXFile $SizeinGB
+If ($DifforCreate -like 'Diff') {
+	CreateVHDXDiff $VHDXFile $VMName $VMLocation
+} else {
+	If ($SourceFile -like 'NoFile') {
+		CreateVHDXBlank $VHDXFile $SizeinGB $VMName $VMLocation
+	} else {
+		Switch ($VMType){
+			BIOS {
+				$Section = "CreateVHDX"
+				CreateVHDXForBIOS $SourceFile $VHDXFile $SizeinGB
+			}
+			UEFI {
+				$Section = "CreateVHDX"
+				CreateVHDXForUEFI $SourceFile $VHDXFile $SizeinGB
+			}
+			default {
+				Logit "You must either specify either BIOS or UEFI, exit"
+				Exit
+			}
+		}
+	}
 }
-UEFI{
-$Section = "CreateVHDX"
-CreateVHDXForUEFI $SourceFile $VHDXFile $SizeinGB
-}
-default{
-Logit "You must either specify either BIOS or UEFI, exit"
-Exit
-}
-}}}
 
 # Clean up
+Logit "Cleanup"
 Cleanup $VHDXFile
 
 #Create VM
-Switch ($VMType){
-BIOS{
-$Section = "CreateVMForBios"
-CreateVMForBIOS $VMName $VMLocation $VHDXFile
+Switch ($VMType) {
+	BIOS {
+		$Section = "CreateVMForBios"
+		CreateVMForBIOS $VMName $VMLocation $VHDXFile
 
-}
-UEFI{
-$Section = "CreateVMForUEFI"
-CreateVMForUEFI $VMName $VMLocation $VHDXFile
+	}
+	UEFI {
+		$Section = "CreateVMForUEFI"
+		CreateVMForUEFI $VMName $VMLocation $VHDXFile
 
-}
-default{
-Logit "Epic Fail, exit"
-Exit
-}
+	}
+		default {
+		Logit "Epic Fail, exit"
+		Exit
+	}
 }
 
 #Add Datadisk if $AddDataDisks = True
-if($AddDataDisk -ne "NoDisk"){
-Logit "adding Datadisk"
-$VM = Get-VM -Name $VMName
-$VMDiskSize = $AddDataDisk
-$VMDiskName = "DataDisk01.vhdx"
-$VMLocation = $VM.Path
-$VMDiskLocation = $VM.HardDrives.path | Split-Path
+if($AddDataDisk -ne "NoDisk") {
+	Logit "adding Datadisk"
+	$VM = Get-VM -Name $VMName
+	$VMDiskSize = $AddDataDisk
+	$VMDiskName = "DataDisk01.vhdx"
+	$VMLocation = $VM.Path
+	$VMDiskLocation = $VM.HardDrives.path | Split-Path
 
-# Create VHDx
-Logit "Creating $VMDiskLocation\$VMName-$VMDiskName"
-$VMDisk02 = New-VHD –Path $VMDiskLocation\$VMName-$VMDiskName -SizeBytes $VMDiskSize
+	# Create VHDx
+	Logit "Creating $VMDiskLocation\$VMName-$VMDiskName"
+	$VMDisk02 = New-VHD –Path $VMDiskLocation\$VMName-$VMDiskName -SizeBytes $VMDiskSize
 
-#Attach Disk
-Add-VMHardDiskDrive -VM $VM -Path $VMDisk02.Path -ControllerType SCSI
+	#Attach Disk
+	Add-VMHardDiskDrive -VM $VM -Path $VMDisk02.Path -ControllerType SCSI
 } 
 
 #Set VLAN
 If ($VLANID -notlike ""){SetVLANID $VMName $VLANID}
 
+# Updating Hostsfile to enable name resolution when remoting from Hyper-v host to Hyper-v guest
+# Remove any old entries for this VM in Hostsfile
+$Section = 'Update Hostsfile'
+Logit "Updating Hostfile with ip and hostname for VM $VMName"
+$ReplaceStr = ""
+$HostsFile = "$env:SystemRoot\System32\drivers\etc\hosts"
+$HostsMatches = Get-Content $HostsFile | Select-String $VMName
+foreach ( $item in $HostsMatches) {
+    (Get-Content $HostsFile) -replace $item, $ReplaceStr | Set-Content $HostsFile -Encoding Ascii
+}
+# Set new entry in Hostsfile
+Add-Content $HostsFile "`n$((get-vm cm01).networkadapters.ipaddresses[0])            CM01            # Hyper-v Guestserver"
+
 #Wait for VM to get ready
+$Section = 'Waiting for VM to finish minisetup'
 if (Get-VM -Name $VMName){
 	#Start VM
 	Logit "Starting VM $VMName"
@@ -577,8 +633,7 @@ if (Get-VM -Name $VMName){
 		sleep 5    
 	} until(Test-NetConnection $VMName -CommonTCPPort WINRM | Where-Object {$_.TcpTestSucceeded} )
 
-}
-else {Logit "Unable to start VM $VMName because it does not exist?"}
+} else {Logit "Unable to start VM $VMName because it does not exist?"}
 #Notify
 Logit "Done"
 
