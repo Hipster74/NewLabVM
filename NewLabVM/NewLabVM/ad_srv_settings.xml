@@ -9,7 +9,7 @@
     <UILanguage>en-US</UILanguage>
     <UserLocale>sv-SE</UserLocale>
     <OSDAdapter0Gateways>10.96.130.1</OSDAdapter0Gateways>
-    <OSDAdapter0DNSServerList>8.8.8.8</OSDAdapter0DNSServerList>
+    <OSDAdapter0DNSServerList>10.96.130.8</OSDAdapter0DNSServerList>
     <OSDAdapter0DNSServerList>8.8.4.4</OSDAdapter0DNSServerList>
     <OSDAdapter0SubnetMaskPrefix>24</OSDAdapter0SubnetMaskPrefix>
     <ProductKey>D2N9P-3P6X9-2R39C-7RTCD-MDVJX</ProductKey>
@@ -36,12 +36,12 @@
    <WorkgroupName>WORKGROUP</WorkgroupName>
   </WorkgroupDefaults>
   <DHCPServerDefaults>
-    <DHCPScopeName>10.96.130.0/24</DHCPScopeName>
-    <DHCPScopeStart>10.96.130.125</DHCPScopeStart>
-    <DHCPScopeEnd>10.96.130.130</DHCPScopeEnd>
+    <DHCPScopeName>10.120.24.0/24</DHCPScopeName>
+    <DHCPScopeStart>10.120.24.100</DHCPScopeStart>
+    <DHCPScopeEnd>10.120.24.150</DHCPScopeEnd>
     <DHCPScopeSubnetMask>255.255.255.0</DHCPScopeSubnetMask>
     <DHCPScopeFQDN>tclab.local</DHCPScopeFQDN>
-    <DHCPScopeDNS>10.96.130.120</DHCPScopeDNS>
-    <DHCPScopeRouter>10.96.130.1</DHCPScopeRouter>
+    <DHCPScopeDNS>10.120.24.8</DHCPScopeDNS>
+    <DHCPScopeRouter>10.120.24.1</DHCPScopeRouter>
   </DHCPServerDefaults>
 </Telecomputing>
