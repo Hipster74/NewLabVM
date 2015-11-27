@@ -9,7 +9,7 @@
     <UILanguage>en-US</UILanguage>
     <UserLocale>sv-SE</UserLocale>
     <OSDAdapter0Gateways>10.96.130.1</OSDAdapter0Gateways>
-    <OSDAdapter0DNSServerList>10.96.130.120</OSDAdapter0DNSServerList>
+    <OSDAdapter0DNSServerList>10.96.130.8</OSDAdapter0DNSServerList>
     <OSDAdapter0DNSServerList>8.8.4.4</OSDAdapter0DNSServerList>
     <OSDAdapter0SubnetMaskPrefix>24</OSDAdapter0SubnetMaskPrefix>
     <ProductKey>D2N9P-3P6X9-2R39C-7RTCD-MDVJX</ProductKey>
@@ -26,4 +26,7 @@
   <WorkgroupDefaults>
    <WorkgroupName>WORKGROUP</WorkgroupName>
   </WorkgroupDefaults>
+  <ConfigurationManagerDefaults>
+    
+  </ConfigurationManagerDefaults>
 </Telecomputing>
