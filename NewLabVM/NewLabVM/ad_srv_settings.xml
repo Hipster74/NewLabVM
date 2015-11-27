@@ -41,7 +41,7 @@
     <DHCPScopeEnd>10.120.24.150</DHCPScopeEnd>
     <DHCPScopeSubnetMask>255.255.255.0</DHCPScopeSubnetMask>
     <DHCPScopeFQDN>tclab.local</DHCPScopeFQDN>
-    <DHCPScopeDNS>10.120.24.8</DHCPScopeDNS>
+    <DHCPScopeDNS>10.96.130.8</DHCPScopeDNS>
     <DHCPScopeRouter>10.120.24.1</DHCPScopeRouter>
   </DHCPServerDefaults>
 </Telecomputing>
