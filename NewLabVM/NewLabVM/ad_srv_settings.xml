@@ -43,5 +43,12 @@
     <DHCPScopeFQDN>tclab.local</DHCPScopeFQDN>
     <DHCPScopeDNS>10.96.130.8</DHCPScopeDNS>
     <DHCPScopeRouter>10.120.24.1</DHCPScopeRouter>
+    <DHCPScopeNameClientNet>10.120.24.0/24</DHCPScopeNameClientNet>
+    <DHCPScopeStartClientNet>10.120.24.100</DHCPScopeStartClientNet>
+    <DHCPScopeEndClientNet>10.120.24.150</DHCPScopeEndClientNet>
+    <DHCPScopeSubnetMaskClientNet>255.255.255.0</DHCPScopeSubnetMaskClientNet>
+    <DHCPScopeFQDNClientNet>tclab.local</DHCPScopeFQDNClientNet>
+    <DHCPScopeDNSClientNet>10.96.130.8</DHCPScopeDNSClientNet>
+    <DHCPScopeRouterClientNet>10.120.24.1</DHCPScopeRouterClientNet>
   </DHCPServerDefaults>
 </Telecomputing>
