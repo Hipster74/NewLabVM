@@ -23,7 +23,7 @@ workflow Install-CM2012SP2
             Write-Verbose "Starting CM 2012 With SP2 installation"
             if (Test-Path "$SourceFilesParentDir\SystemCenter\ConfigMgr2012wSP2\SMSSETUP\BIN\X64\setup.exe") {
                 # Save CM 2012 With SP2 unattendedconfiguration from SMA Asset to answerfile
-                $CM2012SP2Unattend | Out-File "$SourceFilesParentDir\SystemCenter\ConfigMgr2012wSP2\ConfigMgr2012Unattend.ini" -Encoding utf8
+                $CM2012SP2Unattend | Out-File "$SourceFilesParentDir\SystemCenter\ConfigMgr2012wSP2\ConfigMgr2012Unattend.ini" -Encoding unicode
                 # Save CM 2012 With SP2 commandline arguments as array
                 $CM2012SP2UnattendArg = @("/Script","$([char]34)$SourceFilesParentDir\SystemCenter\ConfigMgr2012wSP2\ConfigMgr2012Unattend.ini$([char]34)","/NoUserInput")
                 # Call CM 2012 With SP2 Setup.exe with arguments for unattended installation
@@ -101,7 +101,7 @@ workflow Install-CM2012SP2
 		Copy-Item -Path "$MDTPath\Bin\Microsoft.BDD.CM12Wizards.dll" -Destination "$CM12Path\Bin\Microsoft.BDD.CM12Wizards.dll" -Force
 		Copy-Item -Path "$MDTPath\Bin\Microsoft.BDD.PSSnapIn.dll" -Destination "$CM12Path\Bin\Microsoft.BDD.PSSnapIn.dll" -Force
 		Copy-Item -Path "$MDTPath\Bin\Microsoft.BDD.Core.dll" -Destination "$CM12Path\Bin\Microsoft.BDD.Core.dll" -Force
-		Copy-Item -Path "$MDTPath\Templates\CM12Extensions" -Destination "$CM12Path\XmlStorage\Extensions" -Force -Recurse
+		Copy-Item -Path "$MDTPath\Templates\CM12Extensions\*" -Destination "$CM12Path\XmlStorage\Extensions" -Force -Recurse
 
 		# Edit MOFFile with settings for our CMSite
 		Write-Verbose "Edit MOFFile with settings for our CMSite"

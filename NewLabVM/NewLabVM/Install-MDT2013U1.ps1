@@ -26,14 +26,14 @@ workflow Install-MDT2013U1
                         [parameter(Mandatory=$true)]
         			    $SourceFilesParentDir
                     )
-    			    Start-Process -FilePath "$SourceFilesParentDir\SystemCenter\ConfigMgr2012CU2\CM12_SP2R2SP1CU2-KB3100144-X64-ENU.exe" -ArgumentList $MDT2013U1UnattendArg -Wait
+    			    Start-Process -FilePath "$SourceFilesParentDir\MDT\MicrosoftDeploymentToolkit2013_x64.msi" -ArgumentList $MDT2013U1UnattendArg -Wait
 			    
                 } -ArgumentList $MDT2013U1UnattendArg, $SourceFilesParentDir
 			    
                 # Wait for installation to finish
                 While (($MDT2013U1InstallJob | Get-Job).State -eq 'Running') {
                     Write-Output "Heartbeat from MDT 2013 Update 1 Installation...."
-                    Start-Sleep -Seconds 10
+                    Start-Sleep -Seconds 60
                 }
 				# Verify MDT 2013 Update 1 installation
                 if (select-string -Path "$env:SystemRoot\Temp\MDT2013U1Install.log" -Pattern "Installation success or error status: 0" -AllMatches -SimpleMatch) {

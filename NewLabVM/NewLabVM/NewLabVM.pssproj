@@ -29,10 +29,34 @@
   <ItemGroup />
   <ItemGroup>
     <Compile Include="ad_srv_settings.xml" />
-    <Compile Include="CMLabSetup-Main.ps1" />
+    <Compile Include="Configure-Assets.ps1" />
+    <Compile Include="Install-LabMain.ps1" />
+    <Compile Include="cm_srv_settings.xml" />
+    <Compile Include="Configure-CMPostInstall.ps1" />
     <Compile Include="Configure-LabADSrv.ps1" />
-    <Compile Include="NewLabVM.ps1" />
+    <Compile Include="Configure-LabCMSrv.ps1" />
+    <Compile Include="Create-ADOU.ps1" />
+    <Compile Include="Create-ADUser.ps1" />
+    <Compile Include="Create-CMADStructure.ps1" />
+    <Compile Include="Create-CMShares.ps1" />
+    <Compile Include="Create-SourcefileDisk.ps1" />
+    <Compile Include="Create-SysmanContainer.ps1" />
+    <Compile Include="Enable-CredSSP.ps1" />
+    <Compile Include="Extend-ADSchema.ps1" />
+    <Compile Include="Install-ADK10.ps1" />
+    <Compile Include="Install-ADK8_1.ps1" />
+    <Compile Include="Install-CM2012R2SP1.ps1" />
+    <Compile Include="Install-CM2012R2SP1CU2.ps1" />
+    <Compile Include="Install-CM2012SP2.ps1" />
+    <Compile Include="Install-CMPrimarySiteWinFeatures.ps1" />
+    <Compile Include="Install-CMSQLSrv.ps1" />
+    <Compile Include="Install-MDT2013U1.ps1" />
+    <Compile Include="Install-WDS.ps1" />
+    <Compile Include="New-LabVM.ps1" />
+    <Compile Include="Restart-VM.ps1" />
     <Compile Include="SetupAzureAutomationAssets.ps1" />
+    <Compile Include="Start-HybridChildRunbook.ps1" />
+    <Compile Include="StartAzureAutomationRunbooks.ps1" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Target Name="Build" />

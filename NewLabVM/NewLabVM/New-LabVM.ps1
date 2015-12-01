@@ -489,8 +489,8 @@ if ((CheckVM $VMName)) {
 		Logit "VM $VMName found and Forceparameter set, shutdown and delete VM"
 		Logit "Getting path to $VMName harddrives"
 		$VM = Get-VM -Name $VMName
-		$VMLocation = $VM.ConfigurationLocation
-		Logit "Path to $VMName is $VMLocation"
+		$VMFolder = $VM.ConfigurationLocation
+		Logit "Path to $VMName is $VMFolder"
 	
 		Logit "Shutting down VM $VMName"
 		Get-VM -Name $VMName | Stop-VM -Force
@@ -498,7 +498,8 @@ if ((CheckVM $VMName)) {
 		Get-VM $VMName | Remove-VM -Force
 	
 		Logit "Renaming VMFolder to $VMName" + "Bak as backup"
-		Rename-Item -Path $VM.ConfigurationLocation -NewName "$($VM.name)Bak" -Force
+		Sleep -Seconds 5
+		Rename-Item -Path $VMFolder -NewName "BCK-$($VM.name)-$(Get-Date -Format yyyy-MM-dd-mm)" -Force
 
 	} else {
 		Logit "VM $VMName found and Forceparameter NOT set, aborting to avoid dataloss"
@@ -602,35 +603,45 @@ if($AddDataDisk -ne "NoDisk") {
 #Set VLAN
 If ($VLANID -notlike ""){SetVLANID $VMName $VLANID}
 
-# Updating Hostsfile to enable name resolution when remoting from Hyper-v host to Hyper-v guest
-# Remove any old entries for this VM in Hostsfile
-$Section = 'Update Hostsfile'
-Logit "Updating Hostfile with ip and hostname for VM $VMName"
-$ReplaceStr = ""
-$HostsFile = "$env:SystemRoot\System32\drivers\etc\hosts"
-$HostsMatches = Get-Content $HostsFile | Select-String $VMName
-foreach ( $item in $HostsMatches) {
-    (Get-Content $HostsFile) -replace $item, $ReplaceStr | Set-Content $HostsFile -Encoding Ascii
-}
-# Set new entry in Hostsfile
-Add-Content $HostsFile "`n$((get-vm cm01).networkadapters.ipaddresses[0])            CM01            # Hyper-v Guestserver"
-
 #Wait for VM to get ready
-$Section = 'Waiting for VM to finish minisetup'
+$Section = 'VM minisetup'
 if (Get-VM -Name $VMName){
 	#Start VM
 	Logit "Starting VM $VMName"
 	Start-VM $VMName
 
-	while((Get-VM -Name $VMName).HeartBeat -ne  'OkApplicationsHealthy')
-	{
+	$i = 1
+	while((Get-VM -Name $VMName).HeartBeat -ne  'OkApplicationsHealthy') {
+		if ($i -ge 30) {Write-Error "Timeout when waiting for VM $VMName to start"; Throw "Timeout when waiting for VM $VMName to start"}
 		Logit "Waiting for $VMName to start"
-		Start-Sleep -Seconds 1
+		Start-Sleep -Seconds 10
+		$i++
 	}
-
+	# Updating Hostsfile to enable name resolution when remoting from Hyper-v host to Hyper-v guest
+	# Remove any old entries for this VM in Hostsfile
+	$i = 1
+	while ((Get-VMNetworkAdapter $VMName | select -ExpandProperty ipaddresses) -eq $null) { 
+		if ($i -ge 60) {Write-Error "Timeout when waiting for $VMName ipaddress"; Throw "Timeout when waiting for $VMName ipaddress"}
+		Logit "Waiting for $VMName ipaddress before editing Hostsfile"
+		Start-Sleep -Seconds 10
+		$i++
+	}
+	
+	Logit "Updating Hostfile with ip and hostname for VM $VMName"
+	$ReplaceStr = ""
+	$HostsFile = "$env:SystemRoot\System32\drivers\etc\hosts"
+	$HostsMatches = Get-Content $HostsFile | Select-String $VMName
+	ForEach ( $item in $HostsMatches) {
+		(Get-Content $HostsFile) -replace $item, $ReplaceStr | Set-Content $HostsFile -Encoding Ascii
+	}
+	# Set new entry in Hostsfile
+	Add-Content $HostsFile "`n$((get-vm $VMName).networkadapters.ipaddresses[0])            $VMName            # Hyper-v Guestserver"
+	$i = 1
 	do {
+		if ($i -ge 30) {Write-Error "Timeout when trying to contact WINRM on $VMName"; Throw "Timeout when trying to contact WINRM on $VMName"}
 		Logit "Waiting for VM $VMName to become accessible from VMHost"
-		sleep 5    
+		sleep 10
+		$i++ 
 	} until(Test-NetConnection $VMName -CommonTCPPort WINRM | Where-Object {$_.TcpTestSucceeded} )
 
 } else {Logit "Unable to start VM $VMName because it does not exist?"}

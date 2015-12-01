@@ -74,4 +74,6 @@ Workflow Install-CMPrimarySiteWinFeatures
         }
         
     } -PSComputerName $VMName -PSCredential $VMCredential
+	Write-Verbose "Restarting computer $VMName to complete Windows Features installation"
+	Restart-Computer -PSComputerName $VMName -PSCredential $VMCredential -Wait -For WinRM -Force
 }

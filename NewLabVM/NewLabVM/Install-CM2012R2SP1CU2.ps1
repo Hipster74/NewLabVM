@@ -6,7 +6,7 @@ workflow Install-CM2012R2SP1CU2
         [string]$VMName,
 		[Parameter(Mandatory=$true)]
 		[PSCredential] $VMCredential,
-        [Parameter(Mandatory=$true,HelpMessage="Default is datadisk on d:\Source")]
+        [Parameter(Mandatory=$true,HelpMessage="Default is datadisk on e:\Source")]
         [string]$SourceFilesParentDir
     )    
     

@@ -65,7 +65,7 @@ workflow Install-WDS {
         
     } -PSComputerName $VMName -PSCredential $VMCredential
 
-	Write-Verbose "Restarting computer $VMName to complete Active Directory installation"
+	Write-Verbose "Restarting computer $VMName to complete WDS installation"
 	Restart-Computer -PSComputerName $VMName -PSCredential $VMCredential -Wait -For WinRM -Force
 
     inlinescript {
@@ -86,5 +86,6 @@ workflow Install-WDS {
 		}
     } -PSComputerName $VMName -PSCredential $VMCredential -PSAuthentication CredSSP # CredSSP required for WDSUtil
     
+	Write-Verbose "Done installing WDS on server $VMName"
     
 }

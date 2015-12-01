@@ -70,9 +70,10 @@ Workflow Create-SourcefileDisk {
 	}
 	
 	Inlinescript {
-		Write-Verbose "Remotely connected to $env:COMPUTERNAME"
-		Write-Verbose "Setting disk in online mode and disables readonly"
+		Write-Verbose "Remotely connected to $env:COMPUTERNAME" -Verbose
+		Write-Verbose "Setting disk in online mode and disables readonly" -Verbose
 		Get-Disk | Where {$_.OperationalStatus -eq 'offline'} | Set-Disk -IsReadOnly:$false
 		Get-Disk | Where {$_.OperationalStatus -eq 'offline'} | Set-Disk -IsOffline:$false 
+	
 	} -PSComputerName $VMName -PSCredential $VMCredential
 }

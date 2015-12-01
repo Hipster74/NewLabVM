@@ -112,7 +112,7 @@ Workflow Configure-CMPostinstall {
 			$GroupDiscoveryProps = $GroupDiscovery.PropLists | Where-Object {$_.PropertyListName -eq 'AD Containers'}
 
 			# 0 = location (not group), 0 = recursive, 1 = not used
-			$GroupDiscoveryProps.Values = "Application ADgroups", 0, 0, 1
+			$GroupDiscoveryProps.Values = "Groups", 0, 0, 1
 			$NewGroupProp = New-CimInstance `
 			  -ClientOnly `
 			  -Namespace "root/sms/site_$SiteCode" `

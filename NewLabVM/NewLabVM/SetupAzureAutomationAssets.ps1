@@ -69,15 +69,16 @@ $AutomationAccountName = (Get-AzureAutomationAccount).AutomationAccountName
 
 $CustomerNumber = '149999'
 $CustomerName = 'Telecomputing'
-$CustomerDomain = 'telecomputing.local'
-$CustomerDomainNetBiosName = 'TELECOMPUTING'
-$CustomerCMSrvHostname = 'cm01'
+$CustomerDomain = 'tclab.local'
+$CustomerDomainNetBiosName = 'tclab'
+$CustomerCMSrvHostname = "CM01"
 $CustomerCMSiteCode = 'P99'
+$CustomerDomainControllerFQDN = "$CustomerNumber-AD01.$CustomerDomain"
 $CustomerTCStdAdDn = "OU=$CustomerNumber,OU=Customers,OU=$CustomerNumber" + 'ARN,OU=ASP'
 
 $SourceFilesShareName = 'CMSetupSource'
 $SourceFilesSrvHostname = 'dc01'
-$SourceFilesDestination = 'c:\ConfigMgrMedia'
+$SourceFilesDestination = 'e:\Source'
 
 $CMProductCode = 'BXH69-M62YX-QQD6R-3GPWX-8WMFY' # Telecomputings System Center licensekey
 $CMSDKServer = $("$CustomerCMSrvHostname.$CustomerDomain").ToUpper() # Computer to install the SMS Provider on for primary site installations and the computer name hosting the SMS Provider for ConfigMgr console installations
@@ -86,13 +87,13 @@ $CMDistributionPoint = $("$CustomerCMSrvHostname.$CustomerDomain").ToUpper()
 $CMSQLServerName = $("$CustomerCMSrvHostname.$CustomerDomain").ToUpper()
 $CMPrerequisitePath = "$SourceFilesDestination\SystemCenter\ConfigMgr2012wSP2PreReqs"
 $CMInstallDir = 'c:\ConfigMgr'
-$CMSharesParentFolder = 'D:\Shares'
+$CMSharesParentFolder = 'c:\Shares'
 $CMServersADGroup = "_$CustomerNumber-ConfigMgrServers"
 
-$CMSetupInstallerAccountUsername = 'Administrator'
+$CMSetupInstallerAccountUsername = "$CustomerDomainNetBiosName\__$CustomerNumber-CMInstaller"
 $CMSetupInstallerAccountPassword = 'P@ssw0rd'
 
-$CMNetworkAccountUsername = "__$CustomerNumber-R-NwAAcc"
+$CMNetworkAccountUsername = "$CustomerDomainNetBiosName\__$CustomerNumber-R-NwAAcc"
 $CMNetworkAccountPassword = 'P@ssw0rd'
 
 $CMSQLServiceAccountUsername = "__$CustomerNumber" + 'sqlsvc-mirro'
@@ -107,63 +108,63 @@ $CMSQLServerSAAccountPassword = 'P@ssw0rd'
 New-AzureAutomationConnection -AutomationAccountName $AutomationAccountName -Name "CMSetupConn - $CustomerNumber Configuration Manager" -ConnectionTypeName ConfigurationManager -ConnectionFieldValues @{"ComputerName"="$CustomerCMSrvHostname.$CustomerDomain";"UserName"="$CMSetupInstallerAccountUsername@$CustomerDomain";"Password"="$CMSetupInstallerAccountPassword";"CMSiteCode"="$CustomerCMSiteCode"} -Description "Connection to $CustomerNumber Configuration Manager"
 
 # Create SMA connection to server hosting SMBShare with sourcefiles(SQL, Configuration Manager etc.)
-New-SmaConnection -WebServiceEndpoint $SMAWebEndPoint -Name "CMSetupConn - $CustomerNumber Sourcefiles" -ConnectionTypeName MgmtSvcAdmin –ConnectionFieldValues @{"ComputerName"="$SourceFilesSrvHostname.$CustomerDomain";"UserName"="$CMSetupInstallerAccountUsername@$CustomerDomain";"Password"="$CMSetupInstallerAccountPassword"} -Description "Connection to $CustomerNumber Sourcefilesserver"
+#New-SmaConnection -WebServiceEndpoint $SMAWebEndPoint -Name "CMSetupConn - $CustomerNumber Sourcefiles" -ConnectionTypeName MgmtSvcAdmin –ConnectionFieldValues @{"ComputerName"="$SourceFilesSrvHostname.$CustomerDomain";"UserName"="$CMSetupInstallerAccountUsername@$CustomerDomain";"Password"="$CMSetupInstallerAccountPassword"} -Description "Connection to $CustomerNumber Sourcefilesserver"
 
 # Create SMA Variables for customer environment
-New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar - $CustomerNumber Customernumber" -Value $CustomerNumber -Encrypted $false
-New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar - $CustomerNumber Domain" -Value $CustomerDomain -Encrypted $false
-New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar - $CustomerNumber CMServer Hostname" -Value $CustomerCMSrvHostname -Encrypted $false
-New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar - $CustomerNumber CMSitecode" -Value $CustomerCMSiteCode -Encrypted $false
-New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar - $CustomerNumber Sourcefiles SMBSharename" -Value $SourceFilesShareName -Encrypted $false
-New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar - $CustomerNumber Sourcefiles Destination" -Value $SourceFilesDestination -Encrypted $false
-New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar - $CustomerNumber Telecomputing Standard CMServersgroup" -Value $CMServersADGroup -Encrypted $false
-New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar - $CustomerNumber Telecomputing Standard AD Base DN" -Value $CustomerTCStdAdDn -Encrypted $false
+New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar-$CustomerNumber Customernumber" -Value $CustomerNumber -Encrypted $false
+New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar-$CustomerNumber Domain" -Value $CustomerDomain -Encrypted $false
+New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar-$CustomerNumber CMServer Hostname" -Value $CustomerCMSrvHostname -Encrypted $false
+New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar-$CustomerNumber CMSitecode" -Value $CustomerCMSiteCode -Encrypted $false
+New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar-$CustomerNumber Sourcefiles SMBSharename" -Value $SourceFilesShareName -Encrypted $false
+New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar-$CustomerNumber Sourcefiles Destination" -Value $SourceFilesDestination -Encrypted $false
+New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar-$CustomerNumber Telecomputing Standard CMServersgroup" -Value $CMServersADGroup -Encrypted $false
+New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar-$CustomerNumber Telecomputing Standard AD Base DN" -Value $CustomerTCStdAdDn -Encrypted $false
 
-# GetFQDN for Active Directory Domain Controller in customer domain
-$CustomerDCFQDN = Start-SmaRunbook -WebServiceEndpoint $SMAWebEndPoint -Name 'get-domaincontroller' -Parameters @{"CMConnectionName"="CMSetupConn - $CustomerNumber Configuration Manager"}
-$CustomerDCFQDNJobstatus = Wait-SMAJob -strJobID $CustomerDCFQDN -strWebserviceEndPoint $SMAWebEndPoint
+# Get FQDN for Active Directory Domain Controller in customer domain
+#$Params = @{"CMConnectionName"="CMSetupConn - $CustomerNumber Configuration Manager"}
+#$GetDomainControllerJob = Start-AzureAutomationRunbook -AutomationAccountName $AutomationAccountName -name 'Get-DomainController' -Parameters $Params -RunOn 'CSCLabHost' -Verbose
 
-if ($CustomerDCFQDNJobstatus.Errors = '0') {
-    Set-SmaVariable -WebServiceEndpoint $SMAWebEndPoint -Name "CMSetupVar - $CustomerNumber Domain Controller FQDN" -Value $CustomerDCFQDNJobstatus.Output.StreamText
-    New-SmaConnection -WebServiceEndpoint $SMAWebEndPoint -Name "CMSetupConn - $CustomerNumber Domain Controller" -ConnectionTypeName MgmtSvcAdmin –ConnectionFieldValues @{"ComputerName"="$($CustomerDCFQDNJobstatus.Output.StreamText)";"UserName"="$CMSetupInstallerAccountUsername@$CustomerDomain";"Password"="$CMSetupInstallerAccountPassword"} -Description "Connection to $CustomerNumber Domain Controller"
-}
-else {
-    Write-Error "Unable to retreive customer Domain Controller"
-    Write-Error $CustomerDCFQDNJobstatus.Error.StreamText
-}
+#$GetDomainControllerLoop = $true
+#While ($GetDomainControllerLoop) {
+#   $job = Get-AzureAutomationJob –AutomationAccountName $AutomationAccountName -Id $GetDomainControllerJob.Id
+#   $GetDomainControllerJobStatus = $job.Status
+#   $GetDomainControllerLoop = (($GetDomainControllerJobStatus -ne "Completed") -and ($GetDomainControllerJobStatus -ne "Failed") -and ($GetDomainControllerJobStatus -ne "Suspended") -and ($GetDomainControllerJobStatus -ne "Stopped")) 
+#}
+#if ($GetDomainControllerJobStatus.error.count = '0') {
+#	$GetDomainControllerJobOutput = Get-AzureAutomationJobOutput –AutomationAccountName $AutomationAccountName -Id $GetDomainControllerJob.Id –Stream Output
+	New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar-$CustomerNumber Domain Controller FQDN" -Value $CustomerDomainControllerFQDN -Encrypted $false
+#} else {
+#    $GetDomainControllerJobOutput = Get-AzureAutomationJobOutput –AutomationAccountName $AutomationAccountName -Id $GetDomainControllerJob.Id –Stream Error
+#	Write-Error "Unable to retreive customer Domain Controller FQDN"
+#    Write-Error $GetDomainControllerJobOutput
+#}
 
 # Create SMA Variables for common settings
-Set-SmaVariable -WebServiceEndpoint $SMAWebEndPoint -Name "CMSetupVar - $CustomerNumber Shares Parentfolder" -Value $CMSharesParentFolder
+New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar-$CustomerNumber CMShares Parentfolder" -Value $CMSharesParentFolder -Encrypted $false
 
-# Create credential object to use when starting Runbooks with start-SmaRunbook Asset
-$SMAWebEndPointAdminCredPassword = ConvertTo-SecureString $SMAWebEndPointAdminPassword -AsPlainText -Force
-$SMAWebEndPointCred = New-Object System.Management.Automation.PSCredential ($SMAWebEndPointAdminUserName, $SMAWebEndPointAdminCredPassword)
-#Create Credential Asset in SMA using the newly created credential object
-Set-SmaCredential -WebServiceEndpoint $SMAWebEndPoint -Name "CMSetupCred - $CustomerNumber SMA Admin Account" -Value $SMAWebEndPointCred
-
-# Create credential object to use when creating SMA Credential Asset
+# Create credential object to use when creating Azure Automation Asset
 $CMSetupInstallerCredPassWord = ConvertTo-SecureString $CMSetupInstallerAccountPassword -AsPlainText -Force
-$CMSetupInstallerCred = New-Object System.Management.Automation.PSCredential ($CMSetupInstallerAccountUsername, $CMNwAAccCredPassWord)
-#Create Credential Asset in SMA using the newly created credential object
-Set-SmaCredential -WebServiceEndpoint $SMAWebEndPoint -Name "CMSetupCred - $CustomerNumber SetupInstallerAccount" -Value $CMSetupInstallerCred
+$CMSetupInstallerCred = New-Object System.Management.Automation.PSCredential ($CMSetupInstallerAccountUsername, $CMSetupInstallerCredPassWord)
+# Create Credential Asset in Azure Automation using the newly created credential object
+New-AzureAutomationCredential -AutomationAccountName $AutomationAccountName -Name "CMSetupCred-$CustomerNumber CMInstaller Domainaccount" -Value $CMSetupInstallerCred
 
-# Create credential object to use when creating SMA Credential Asset
+# Create credential object to use when creating Azure Automation Asset
 $CMNwAAccCredPassWord = ConvertTo-SecureString $CMNetworkAccountPassword -AsPlainText -Force
 $CMNwAACCCred = New-Object System.Management.Automation.PSCredential ($CMNetworkAccountUsername, $CMNwAAccCredPassWord)
-#Create Credential Asset in SMA using the newly created credential object
-Set-SmaCredential -WebServiceEndpoint $SMAWebEndPoint -Name "CMSetupCred - $CustomerNumber NetworkAccessAccount" -Value $CMNwAACCCred
+# Create Credential Asset in Azure Automation using the newly created credential object
+New-AzureAutomationCredential -AutomationAccountName $AutomationAccountName -Name "CMSetupCred-$CustomerNumber NetworkAccessAccount" -Value $CMNwAACCCred
 
-# Create credential object to use when creating SMA Credential Asset
+# Create credential object to use when creating Azure Automation Asset
 $CMSQLServiceAccountCredPassword = ConvertTo-SecureString $CMSQLServiceAccountPassword -AsPlainText -Force
 $CMSQLServiceAccountCred = New-Object System.Management.Automation.PSCredential ($CMSQLServiceAccountUsername, $CMSQLServiceAccountCredPassword)
-#Create Credential Asset in SMA using the newly created credential object
-Set-SmaCredential -WebServiceEndpoint $SMAWebEndPoint -Name "CMSetupCred - $CustomerNumber SQL Service Account" -Value $CMSQLServiceAccountCred
+# Create Credential Asset in Azure Automation using the newly created credential object
+New-AzureAutomationCredential -AutomationAccountName $AutomationAccountName -Name "CMSetupCred-$CustomerNumber SQL Service Account" -Value $CMSQLServiceAccountCred
 
-# Create credential object to use when creating SMA Credential Asset
+# Create credential object to use when creating Azure Automation Asset
 $CMSQLServerSAAccountCredPassword = ConvertTo-SecureString $CMSQLServerSAAccountPassword -AsPlainText -Force
 $CMSQLServerSAAccountCred = New-Object System.Management.Automation.PSCredential ($CMSQLServerSAAccountUsername, $CMSQLServerSAAccountCredPassword)
-#Create Credential Asset in SMA using the newly created credential object
-Set-SmaCredential -WebServiceEndpoint $SMAWebEndPoint -Name "CMSetupCred - $CustomerNumber SQL SA Account" -Value $CMSQLServerSAAccountCred
+# Create Credential Asset in Azure Automation using the newly created credential object
+New-AzureAutomationCredential -AutomationAccountName $AutomationAccountName -Name "CMSetupCred-$CustomerNumber SQL SA Account" -Value $CMSQLServerSAAccountCred
 
 $SQLSrv2014Unattend = @"
 ;SQL Server 2014 Configuration File
@@ -307,7 +308,7 @@ RSSVCACCOUNT="NT Service\ReportServer`$A$CustomerNumber"
 RSSVCSTARTUPTYPE="Automatic"
 "@
 
-Set-SmaVariable -WebServiceEndpoint $SMAWebEndPoint -Name "CMSetupVar - $CustomerNumber SQLserver 2014 Unattend" -Value $SQLSrv2014Unattend
+New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar-$CustomerNumber SQLserver 2014 Unattend" -Value $SQLSrv2014Unattend -Encrypted $false
 
 $CM2012SP2Unattend = @"
 [Identification]
@@ -337,7 +338,8 @@ SQLSSBPort=4022
 [HierarchyExpansionOption]
 "@
 
-Set-SmaVariable -WebServiceEndpoint $SMAWebEndPoint -Name "CMSetupVar - $CustomerNumber Configuration Manager 2012 Unattend" -Value $CM2012SP2Unattend
+New-AzureAutomationVariable -AutomationAccountName $AutomationAccountName -Name "CMSetupVar-$CustomerNumber Configuration Manager 2012 Unattend" -Value $CM2012SP2Unattend -Encrypted $false
+
 
 
 

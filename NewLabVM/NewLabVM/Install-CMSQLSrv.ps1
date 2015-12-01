@@ -92,8 +92,8 @@ workflow Install-CMSQLSrv
 
             # Create SQL Server objects
             [array]$SQLSrvInstanceName = (select-string -path "$SourceFilesParentDir\SQL\SQL2014\ConfigurationFile.ini" -pattern "INSTANCENAME=" -allmatches –simplematch).Line.Split('"')
-            $SQLServerSMO = New-Object Microsoft.SqlServer.Management.Smo.Server("cm01\$($SQLSrvInstanceName[1])")
-            $SQLServerWMI= New-Object ("Microsoft.SqlServer.Management.Smo.Wmi.ManagedComputer") $env:COMPUTERNAME
+            $SQLServerSMO = New-Object Microsoft.SqlServer.Management.Smo.Server("$env:COMPUTERNAME\$($SQLSrvInstanceName[1])")
+            $SQLServerWMI = New-Object ("Microsoft.SqlServer.Management.Smo.Wmi.ManagedComputer") $env:COMPUTERNAME
 
             # Set Named Instance TCP port and disable TCP Dynamic Ports
             Write-Verbose "Setting Named Instance TCP port and disable TCP Dynamic Ports"
