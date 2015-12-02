@@ -111,6 +111,45 @@ workflow Install-CM2012SP2
 		# Running mofcomp to compile new MOFFile, this must be done to be able to create MDT Task sequences etc. in CM console
 		Write-Verbose "Compiling MOFFile $env:SystemRoot\temp\Microsoft.BDD.CM12Actions.mof with MOFComp.exe"
 		& mofcomp.exe "$env:SystemRoot\temp\Microsoft.BDD.CM12Actions.mof"
+
+		# Update Configuration Manager Powershell CMDlets
+		try {
+			if (Test-Path "$SourceFilesParentDir\SystemCenter\ConfigMgr2012PSCmdletsUpdate\ConfigMgr2012PowerShellCmdlets.msi") {
+					# Save ConfigMgr CMDlets Update commandline arguments as array
+					$ConfigMgrCMDletsUpdateUnattendArg = @("/qn","/L*v","$env:SystemRoot\Logs\ConfigMgrCMDletsUpdate.log","REBOOT=ReallySuppress")
+					# Call ConfigMgr CMDlets Update MSI with arguments for unattended installation
+					$ConfigMgrCMDletsUpdateJob = Start-Job -Name 'ConfigMgrCMDletsUpdate' -ScriptBlock {
+    					param(
+        					[parameter(Mandatory=$true)]
+        					$ConfigMgrCMDletsUpdateUnattendArg,
+							[parameter(Mandatory=$true)]
+        					$SourceFilesParentDir
+						)
+    					Start-Process -FilePath "$SourceFilesParentDir\SystemCenter\ConfigMgr2012PSCmdletsUpdate\ConfigMgr2012PowerShellCmdlets.msi" -ArgumentList $ConfigMgrCMDletsUpdateUnattendArg -Wait
+			    
+					} -ArgumentList $ConfigMgrCMDletsUpdateUnattendArg, $SourceFilesParentDir
+			    
+					# Wait for installation to finish
+					While (($ConfigMgrCMDletsUpdateJob | Get-Job).State -eq 'Running') {
+						Write-Output "Heartbeat from ConfigMgr CMDlets Update...."
+						Start-Sleep -Seconds 60
+					}
+					# Verify ConfigMgr CMDlets Update
+					if (select-string -Path "$env:SystemRoot\Logs\ConfigMgrCMDletsUpdate.log" -Pattern "Installation success or error status: 0" -AllMatches -SimpleMatch) {
+						Write-Output "ConfigMgr CMDlets Update installed successfully"
+					
+					} else {
+						Write-Error "ConfigMgr CMDlets Update installation failed"
+						Throw "ConfigMgr CMDlets Update installation failed"
+					}
+				} else {
+					Write-Error "Could not find $SourceFilesParentDir\SystemCenter\ConfigMgr2012PSCmdletsUpdate\ConfigMgr2012PowerShellCmdlets.msi, unable to install ConfigMgr CMDlets Update"
+					Throw "Unable to locate ConfigMgr2012PowerShellCmdlets.msi"
+				}
+        } catch {
+            Write-Verbose "Failed to install ConfigMgr CMDlets Update"
+            Write-Error $_.Exception
+        }
                            
     } -PSComputerName $VMName -PSCredential $VMCredential -PSAuthentication CredSSP # CredSSP required for Configuration Manger Setup to be able to verify Active Directory connection
 }
