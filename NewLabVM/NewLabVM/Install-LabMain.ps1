@@ -62,7 +62,7 @@ Workflow Install-LabMain {
 	
 	$ChildRunbookName = "Configure-LabADSrvWF"
 	$ChildRunbookInputParams = @{"VMName"="$CustomerADSrvHostname";"VMCredential"='CMLabCred-SrvLocalAdmin';"SrvSettingsXMLFile"="$ADServersSettingsXML"}
-	Start-HybridChildRunbook -ChildRunbookName $ChildRunbookName -ChildRunbookInputParams $ChildRunbookInputParams -AzureOrgIdCredential $AzureCredential -AzureSubscriptionName $AzureSubscriptionName -AutomationAccountName $AutomationAccountName -WaitForJobCompletion:$true -ReturnJobOutput:$true -HybridWorkerGroup $HybridWorkerGroup
+	Start-HybridChildRunbook -ChildRunbookName $ChildRunbookName -ChildRunbookInputParams $ChildRunbookInputParams -AzureOrgIdCredential $AzureCredential -AzureSubscriptionName $AzureSubscriptionName -AutomationAccountName $AutomationAccountName -WaitForJobCompletion:$true -ReturnJobOutput:$true -HybridWorkerGroup $HybridWorkerGroup -JobPollingTimeoutInSeconds 1200
 
 	$ChildRunbookName = "New-LabSrv"
     $ChildRunbookInputParams = @{"Sourcefile"="$VMSrvOSImageDestination";"SrvSettingsXMLFile"="$CMServersSettingsXML";"VMName"="$CustomerCMSrvHostname";"VMLocation"="$VMPath";"VMMemory"="16384";"IPAddress"="$CMServerIP";"DifforCreate"="CREATE";"VMType"="UEFI";"DomainOrWorkGroup"="DOMAIN";"Force"=$true}
@@ -154,7 +154,7 @@ Workflow Install-LabMain {
 	
 	$ChildRunbookName = "Configure-CMPostinstall"
 	$ChildRunbookInputParams = @{"VMName"="$CustomerCMSrvHostname";"VMCredential"="CMSetupCred-$CustomerNumber CMInstaller Domainaccount";"CMNetworkAccountCredential"="CMSetupCred-$CustomerNumber NetworkAccessAccount";"OULaptops"="OU=Laptops,OU=Computers,$CustomerTCStdAdDn";"OUDesktops"="OU=Desktops,OU=Computers,$CustomerTCStdAdDn";"OUUsers"="OU=Users,$CustomerTCStdAdDn";"OUAppGroups"="OU=Resources,$CustomerTCStdAdDn"}
-	Start-HybridChildRunbook -ChildRunbookName $ChildRunbookName -ChildRunbookInputParams $ChildRunbookInputParams -AzureOrgIdCredential $AzureCredential -AzureSubscriptionName $AzureSubscriptionName -AutomationAccountName $AutomationAccountName -WaitForJobCompletion:$true -ReturnJobOutput:$true -HybridWorkerGroup $HybridWorkerGroup
+	Start-HybridChildRunbook -ChildRunbookName $ChildRunbookName -ChildRunbookInputParams $ChildRunbookInputParams -AzureOrgIdCredential $AzureCredential -AzureSubscriptionName $AzureSubscriptionName -AutomationAccountName $AutomationAccountName -WaitForJobCompletion:$true -ReturnJobOutput:$true -HybridWorkerGroup $HybridWorkerGroup -JobPollingTimeoutInSeconds 1200
 	
 	[datetime]$EndRun = Get-Date
 	[timespan]$Runtime = New-TimeSpan -Start $StartRun.ToLongTimeString() -End $EndRun.ToLongTimeString()
