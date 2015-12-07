@@ -1,0 +1,29 @@
+<Telecomputing>
+  <MachineDefaults>
+    <AdminPassword>P@ssw0rd</AdminPassword>
+    <OrgName>Telecomputing</OrgName>
+    <FullName>Telecomputing</FullName>
+    <TimeZoneName>W. Europe Standard Time</TimeZoneName>
+    <InputLocale>sv-SE</InputLocale>
+    <SystemLocale>en-US</SystemLocale>
+    <UILanguage>en-US</UILanguage>
+    <UserLocale>sv-SE</UserLocale>
+    <OSDAdapter0Gateways>10.96.130.1</OSDAdapter0Gateways>
+    <OSDAdapter0DNSServerList>10.96.130.8</OSDAdapter0DNSServerList>
+    <OSDAdapter0DNSServerList>8.8.4.4</OSDAdapter0DNSServerList>
+    <OSDAdapter0SubnetMaskPrefix>24</OSDAdapter0SubnetMaskPrefix>
+    <ProductKey>2XYVN-VVRMQ-3JRC3-4GMPR-844CF</ProductKey>
+    <VMSwitchName>UpLinkSwitch</VMSwitchName>
+   </MachineDefaults>
+  <DomainDefaults>
+    <DNSDomain>tclab.local</DNSDomain>
+    <DomainNetBios>TCLAB</DomainNetBios>
+    <DomainAdmin>Administrator</DomainAdmin>
+    <DomainAdminPassword>P@ssw0rd</DomainAdminPassword>
+    <DomainAdminDomain>TCLAB</DomainAdminDomain>
+    <MachienObjectOU></MachienObjectOU>
+  </DomainDefaults>
+  <WorkgroupDefaults>
+   <WorkgroupName>WORKGROUP</WorkgroupName>
+  </WorkgroupDefaults>
+</Telecomputing>
