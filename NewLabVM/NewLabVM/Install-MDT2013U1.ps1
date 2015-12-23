@@ -15,7 +15,7 @@ workflow Install-MDT2013U1
                         
         try {
             Write-Verbose "Starting MDT 2013 Update 1 installation"
-            if (Test-Path "$SourceFilesParentDir\MDT\MicrosoftDeploymentToolkit2013_x64.msi") {
+            if (Test-Path "$SourceFilesParentDir\MDT\2013U1\MicrosoftDeploymentToolkit2013_x64.msi") {
                 # Save MDT 2013 Update 1 commandline arguments as array
                 $MDT2013U1UnattendArg = @("/qn","/L*v","$env:SystemRoot\Temp\MDT2013U1Install.log","REBOOT=ReallySuppress")
                 # Call MDT 2013 Update 1 MSI with arguments for unattended installation
@@ -26,7 +26,7 @@ workflow Install-MDT2013U1
                         [parameter(Mandatory=$true)]
         			    $SourceFilesParentDir
                     )
-    			    Start-Process -FilePath "$SourceFilesParentDir\MDT\MicrosoftDeploymentToolkit2013_x64.msi" -ArgumentList $MDT2013U1UnattendArg -Wait
+    			    Start-Process -FilePath "$SourceFilesParentDir\MDT\2013U1\MicrosoftDeploymentToolkit2013_x64.msi" -ArgumentList $MDT2013U1UnattendArg -Wait
 			    
                 } -ArgumentList $MDT2013U1UnattendArg, $SourceFilesParentDir
 			    
@@ -45,7 +45,7 @@ workflow Install-MDT2013U1
                 }
             }
             else {
-                Write-Error "Could not find $SourceFilesParentDir\MDT\MicrosoftDeploymentToolkit2013_x64.msi , unable to install MDT 2013 Update 1"
+                Write-Error "Could not find $SourceFilesParentDir\MDT\2013U1\MicrosoftDeploymentToolkit2013_x64.msi , unable to install MDT 2013 Update 1"
                 Throw "Unable to locate MicrosoftDeploymentToolkit2013_x64.msi"
             }
         }
