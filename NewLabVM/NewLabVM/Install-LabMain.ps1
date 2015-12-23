@@ -32,6 +32,7 @@ Workflow Install-LabMain {
 	$CMServersADGroup = "_$CustomerNumber-ConfigMgrServers"
 	$CMServersSettingsXML = "cm_srv_settings.xml"
 	$CMServerIP = '10.96.130.9'
+	$CMClientOSImage = "$SourceFilesDestination\OSImage\Windows10Image\011_2015-10-5.wim" # Path and filename to OSImage that will get imported to CM
 
 	$ADServersSettingsXML = "ad_srv_settings.xml"
 	$ADServerIP = '10.96.130.8'
@@ -109,11 +110,6 @@ Workflow Install-LabMain {
     $ChildRunbookInputParams = @{'CustomerDomainController'="$CustomerADSrvHostname";'OU'="OU=Users,$CustomerTCStdAdDn";"VMCredential"='CMLabCred-SrvLocalAdmin'}
 	Start-HybridChildRunbook -ChildRunbookName $ChildRunbookName -ChildRunbookInputParams $ChildRunbookInputParams -AzureOrgIdCredential $AzureCredential -AzureSubscriptionName $AzureSubscriptionName -AutomationAccountName $AutomationAccountName -WaitForJobCompletion:$true -ReturnJobOutput:$true -HybridWorkerGroup $HybridWorkerGroup
 	
-	$ChildRunbookName = "Import-ADGPO"
-    $ChildRunbookInputParams = @{'CustomerDomainController'="$CustomerADSrvHostname";'GPOLinkOU'="OU=Computers,$CustomerTCStdAdDn";"GPOName"="Managed Client - Firewall";"GPOGuid"='6FBBFCA9-5CC0-4718-8277-2E840C5A78E9';"SourceFilesParentDir"="$SourceFilesDestination";"VMCredential"='CMLabCred-SrvLocalAdmin'}
-	Start-HybridChildRunbook -ChildRunbookName $ChildRunbookName -ChildRunbookInputParams $ChildRunbookInputParams -AzureOrgIdCredential $AzureCredential -AzureSubscriptionName $AzureSubscriptionName -AutomationAccountName $AutomationAccountName -WaitForJobCompletion:$true -ReturnJobOutput:$true -HybridWorkerGroup $HybridWorkerGroup
-
-
 	$ChildRunbookName = "Enable-CredSSP"
     $ChildRunbookInputParams = @{"VMName"="$CustomerCMSrvHostname";"VMCredential"='CMLabCred-SrvLocalAdmin'}
 	Start-HybridChildRunbook -ChildRunbookName $ChildRunbookName -ChildRunbookInputParams $ChildRunbookInputParams -AzureOrgIdCredential $AzureCredential -AzureSubscriptionName $AzureSubscriptionName -AutomationAccountName $AutomationAccountName -WaitForJobCompletion:$true -ReturnJobOutput:$true -HybridWorkerGroup $HybridWorkerGroup
@@ -139,6 +135,10 @@ Workflow Install-LabMain {
 	$ChildRunbookName = "Install-CMPrimarySiteWinFeatures"
     $ChildRunbookInputParams = @{"VMName"="$CustomerCMSrvHostname";"VMCredential"="CMSetupCred-$CustomerNumber CMInstaller Domainaccount";"MacSupport"=$true}
 	Start-HybridChildRunbook -ChildRunbookName $ChildRunbookName -ChildRunbookInputParams $ChildRunbookInputParams -AzureOrgIdCredential $AzureCredential -AzureSubscriptionName $AzureSubscriptionName -AutomationAccountName $AutomationAccountName -WaitForJobCompletion:$true -ReturnJobOutput:$true -HybridWorkerGroup $HybridWorkerGroup -JobPollingTimeoutInSeconds 1200
+	
+	$ChildRunbookName = "Import-ADGPO"
+    $ChildRunbookInputParams = @{"VMName"="$CustomerCMSrvHostname";"VMCredential"="CMSetupCred-$CustomerNumber CMInstaller Domainaccount";'GPOLinkOU'="OU=Computers,$CustomerTCStdAdDn";"GPOName"="Managed Client - Firewall";"GPOGuid"='6FBBFCA9-5CC0-4718-8277-2E840C5A78E9';"SourceFilesParentDir"="$SourceFilesDestination"}
+	Start-HybridChildRunbook -ChildRunbookName $ChildRunbookName -ChildRunbookInputParams $ChildRunbookInputParams -AzureOrgIdCredential $AzureCredential -AzureSubscriptionName $AzureSubscriptionName -AutomationAccountName $AutomationAccountName -WaitForJobCompletion:$true -ReturnJobOutput:$true -HybridWorkerGroup $HybridWorkerGroup
 	
 	# Checkpoint Workflow, credentials must be cleared and reassigned for Workflow resume to work
 	$AzureCredential = $null
@@ -176,7 +176,7 @@ Workflow Install-LabMain {
 	Checkpoint-Workflow
 	$AzureCredential = Get-AutomationPSCredential -Name 'AzureOrgIdCredential'
 	
-	$ChildRunbookName = "Install-MDT2013U1"
+	$ChildRunbookName = "Install-MDT2013U2"
 	$ChildRunbookInputParams = @{"VMName"="$CustomerCMSrvHostname";"VMCredential"="CMSetupCred-$CustomerNumber CMInstaller Domainaccount";"SourceFilesParentDir"="$SourceFilesDestination"}
 	Start-HybridChildRunbook -ChildRunbookName $ChildRunbookName -ChildRunbookInputParams $ChildRunbookInputParams -AzureOrgIdCredential $AzureCredential -AzureSubscriptionName $AzureSubscriptionName -AutomationAccountName $AutomationAccountName -WaitForJobCompletion:$true -ReturnJobOutput:$true -HybridWorkerGroup $HybridWorkerGroup
 	
@@ -235,7 +235,7 @@ Workflow Install-LabMain {
 	$AzureCredential = Get-AutomationPSCredential -Name 'AzureOrgIdCredential'
 	
 	$ChildRunbookName = "Configure-CMPostinstall"
-	$ChildRunbookInputParams = @{"VMName"="$CustomerCMSrvHostname";"VMCredential"="CMSetupCred-$CustomerNumber CMInstaller Domainaccount";"CMNetworkAccountCredential"="CMSetupCred-$CustomerNumber NetworkAccessAccount";"CMPushInstallAccountCredential"="CMSetupCred-$CustomerNumber PushInstallationAccount";"OULaptops"="OU=Laptops,OU=Computers,$CustomerTCStdAdDn";"OUDesktops"="OU=Desktops,OU=Computers,$CustomerTCStdAdDn";"OUUsers"="OU=Users,$CustomerTCStdAdDn";"OUAppGroups"="OU=Resources,$CustomerTCStdAdDn";"CustomerNumber"="$CustomerNumber"}
+	$ChildRunbookInputParams = @{"VMName"="$CustomerCMSrvHostname";"VMCredential"="CMSetupCred-$CustomerNumber CMInstaller Domainaccount";"CMNetworkAccountCredential"="CMSetupCred-$CustomerNumber NetworkAccessAccount";"CMPushInstallAccountCredential"="CMSetupCred-$CustomerNumber PushInstallationAccount";"OULaptops"="OU=Laptops,OU=Computers,$CustomerTCStdAdDn";"OUDesktops"="OU=Desktops,OU=Computers,$CustomerTCStdAdDn";"OUUsers"="OU=Users,$CustomerTCStdAdDn";"OUAppGroups"="OU=Resources,$CustomerTCStdAdDn";"CMClientOSImage"="$CMClientOSImage";"CMSharesParentFolder"="$CMSharesParentFolder";"CustomerNumber"="$CustomerNumber"}
 	Start-HybridChildRunbook -ChildRunbookName $ChildRunbookName -ChildRunbookInputParams $ChildRunbookInputParams -AzureOrgIdCredential $AzureCredential -AzureSubscriptionName $AzureSubscriptionName -AutomationAccountName $AutomationAccountName -WaitForJobCompletion:$true -ReturnJobOutput:$true -HybridWorkerGroup $HybridWorkerGroup -JobPollingTimeoutInSeconds 1200
 	
 	$ChildRunbookName = "New-LabClientVM"
